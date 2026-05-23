@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { User, Bookmark, LogOut, ChevronDown, LayoutDashboard } from "lucide-react"
 
@@ -42,6 +42,9 @@ const HOC_VIEN_MENU = [
 
 export default function Navbar() {
   const router = useRouter()
+  const pathname = usePathname()
+  const isDarkHero = pathname === "/"
+  const isHiddenRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin")
   const supabase = createClient()
 
   const [user, setUser] = useState<any>(null)
@@ -56,8 +59,6 @@ export default function Navbar() {
   const [hocVienOpen, setHocVienOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [scrollY, setScrollY] = useState(0)
-
-  // ── SCROLL STATE ──
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -83,8 +84,10 @@ export default function Navbar() {
       }
     })
 
-    // ── SCROLL LISTENER ──
-    const handleScroll = () => setScrolled(window.scrollY > 80)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 80)
+      setScrollY(window.scrollY)
+    }
     window.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => {
@@ -104,12 +107,6 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY)
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  useEffect(() => {
     const lock = drawerOpen ? "hidden" : ""
     document.body.style.overflow = lock
     document.documentElement.style.overflow = lock
@@ -118,6 +115,8 @@ export default function Navbar() {
       document.documentElement.style.overflow = ""
     }
   }, [drawerOpen])
+
+  if (isHiddenRoute) return null
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -142,31 +141,64 @@ export default function Navbar() {
   const avatarLetter = displayName[0].toUpperCase()
   const isAdminOrEditor = profile?.role === "admin" || profile?.role === "editor"
 
-  // Scroll-based smooth transition: ratio 0 = top (transparent), 1 = scrolled (white)
+  // ── MÀU SẮC NAVBAR ──
   const SCROLL_THRESHOLD = 300
   const ratio = Math.min(scrollY / SCROLL_THRESHOLD, 1)
   const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t)
 
-  // Nav background: transparent → white
-  const navBg = `rgba(255,255,255,${ratio})`
-  const borderColor = `rgba(0,0,0,${0.08 * ratio})`
-  const boxShadow = ratio > 0.05 ? `0 2px 20px rgba(0,0,0,${0.08 * ratio})` : "none"
+  // Trang chủ: logic gốc scroll-based
+  // Trang trắng: luôn dùng màu tối
+  const navBg = isDarkHero
+    ? `rgba(255,255,255,${ratio})`
+    : "rgba(255,255,255,0.97)"
 
-  // Nav link colors: white mờ → dark
-  const linkColor = `rgba(${lerp(255,15,ratio)},${lerp(255,25,ratio)},${lerp(255,50,ratio)},${(0.65 + 0.15 * ratio).toFixed(2)})`
-  // "BAMBOO" text: white → #0A1628
-  const logoColor = `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
-  // Login button
-  const loginColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.75 + 0.25 * ratio).toFixed(2)})`
-  const loginBorder = `1px solid rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.2 + 0.1 * ratio).toFixed(2)})`
-  // Hamburger lines
-  const hamColor = `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+  const borderColor = isDarkHero
+    ? `rgba(0,0,0,${0.08 * ratio})`
+    : `rgba(0,0,0,${0.05 + 0.08 * ratio})`
 
-  // User button: adapt theo scroll (dark theme u2192 light theme)
-  const userBtnBg = `rgba(0,195,137,${(lerp(8, 12, ratio) / 100).toFixed(2)})`
-  const userBtnBorder = `1px solid rgba(0,195,137,${(lerp(20, 45, ratio) / 100).toFixed(2)})`
-  const userNameColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.85)`
-  const chevronColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.4)`
+  const boxShadow = isDarkHero
+    ? (ratio > 0.05 ? `0 2px 20px rgba(0,0,0,${0.08 * ratio})` : "none")
+    : (ratio > 0.05 ? `0 1px 10px rgba(0,0,0,${0.05 * ratio})` : "none")
+
+  // Accent line (chỉ trang trắng)
+  const accentScaleX = isDarkHero ? 0 : ratio
+
+  // Màu chữ
+  const linkColor = isDarkHero
+    ? `rgba(${lerp(255,15,ratio)},${lerp(255,25,ratio)},${lerp(255,50,ratio)},${(0.65 + 0.15 * ratio).toFixed(2)})`
+    : "rgba(15,25,50,0.85)"
+
+  const logoColor = isDarkHero
+    ? `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+    : "rgb(10,22,40)"
+
+  const loginColor = isDarkHero
+    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.75 + 0.25 * ratio).toFixed(2)})`
+    : "rgba(10,22,40,0.85)"
+
+  const loginBorder = isDarkHero
+    ? `1px solid rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.2 + 0.1 * ratio).toFixed(2)})`
+    : "1px solid rgba(10,22,40,0.15)"
+
+  const hamColor = isDarkHero
+    ? `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+    : "rgb(10,22,40)"
+
+  const userBtnBg = isDarkHero
+    ? `rgba(0,195,137,${(lerp(8, 12, ratio) / 100).toFixed(2)})`
+    : "rgba(0,195,137,0.10)"
+
+  const userBtnBorder = isDarkHero
+    ? `1px solid rgba(0,195,137,${(lerp(20, 45, ratio) / 100).toFixed(2)})`
+    : "1px solid rgba(0,195,137,0.35)"
+
+  const userNameColor = isDarkHero
+    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.85)`
+    : "rgba(10,22,40,0.85)"
+
+  const chevronColor = isDarkHero
+    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.4)`
+    : "rgba(10,22,40,0.4)"
 
   return (
     <>
@@ -231,6 +263,19 @@ export default function Navbar() {
           borderBottom: `1px solid ${borderColor}`,
           position: "relative", zIndex: 100,
         }}>
+          {/* Accent line — chỉ hiện trên trang trắng khi scroll */}
+          {!isDarkHero && (
+            <div style={{
+              position: "absolute", bottom: 0, left: 0,
+              width: "100%", height: "2px",
+              background: "#00C389",
+              transform: `scaleX(${accentScaleX})`,
+              transformOrigin: "left",
+              transition: "transform 0.25s ease",
+              pointerEvents: "none",
+            }} />
+          )}
+
           {/* Logo */}
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
             <img src="/o.png" alt="BAMBOO100" style={{ width: "34px", height: "34px", borderRadius: "8px" }} />
@@ -243,7 +288,7 @@ export default function Navbar() {
           <div className="nb-desktop" style={{ position: "relative" }}>
             {NAV_LINKS.map((item) => (
               <Link key={item.label} href={item.href} style={{
-                color: linkColor, fontSize: "13px",
+                color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
                 transition: "color 0.35s",
               }}>{item.label}</Link>
@@ -252,7 +297,7 @@ export default function Navbar() {
             {/* Học viện mega menu */}
             <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "relative" }}>
               <Link href="/hoc-vien" style={{
-                color: linkColor, fontSize: "13px",
+                color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
                 display: "flex", alignItems: "center", transition: "color 0.35s",
               }}>Học viện</Link>
@@ -280,7 +325,7 @@ export default function Navbar() {
 
             {NAV_LINKS_RIGHT.map((item) => (
               <Link key={item.label} href={item.href} style={{
-                color: linkColor, fontSize: "13px",
+                color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
                 transition: "color 0.35s",
               }}>{item.label}</Link>
@@ -310,7 +355,7 @@ export default function Navbar() {
                   }}>
                     {avatarLetter}
                   </div>
-                  <span style={{ color: userNameColor, fontSize: "13px", fontWeight: 500, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.25s ease" }}>
+                  <span style={{ color: userNameColor, fontSize: "13px", fontWeight: 600, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.25s ease" }}>
                     {displayName}
                   </span>
                   <ChevronDown
@@ -357,13 +402,13 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/dang-nhap" className="nb-desktop" style={{
-                  color: loginColor, fontSize: "13px", padding: "7px 16px",
+                  color: loginColor, fontSize: "13px", fontWeight: 600, padding: "7px 16px",
                   border: loginBorder, borderRadius: "7px", textDecoration: "none",
                   transition: "color 0.35s, border 0.35s",
                 }}>Đăng nhập</Link>
                 <Link href="/lien-he#dat-lich" className="nb-desktop" style={{
                   background: "#00C389", color: "#fff", fontSize: "13px",
-                  padding: "8px 16px", borderRadius: "7px", textDecoration: "none", fontWeight: 500,
+                  padding: "8px 16px", borderRadius: "7px", textDecoration: "none", fontWeight: 600,
                 }}>Tư vấn miễn phí</Link>
               </>
             )}
@@ -398,7 +443,6 @@ export default function Navbar() {
           display: "flex", flexDirection: "column",
           animation: "slideInRight 0.28s ease", overflowY: "auto",
         }}>
-          {/* Header */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "0 20px", height: "60px",
@@ -421,7 +465,6 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* User info */}
           {user && (
             <div style={{
               display: "flex", alignItems: "center", gap: "12px",
@@ -443,17 +486,15 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Nav links */}
           <div style={{ flex: 1, padding: "8px 0" }}>
             {NAV_LINKS.map((item) => (
               <Link key={item.label} href={item.href} onClick={close} style={{
                 display: "block", padding: "16px 24px",
-                color: "#0A1628", fontSize: "15px", fontWeight: 500,
+                color: "#0A1628", fontSize: "15px", fontWeight: 600,
                 textDecoration: "none", borderBottom: "1px solid #f1f5f9",
               }}>{item.label}</Link>
             ))}
 
-            {/* Học viện accordion */}
             <button
               onClick={() => setHocVienOpen(!hocVienOpen)}
               style={{
@@ -462,7 +503,7 @@ export default function Navbar() {
                 borderBottom: "1px solid #f1f5f9",
               }}
             >
-              <span style={{ color: "#0A1628", fontSize: "15px", fontWeight: 500 }}>Học viện</span>
+              <span style={{ color: "#0A1628", fontSize: "15px", fontWeight: 600 }}>Học viện</span>
               <ChevronDown
                 size={16}
                 color="#94a3b8"
@@ -474,7 +515,7 @@ export default function Navbar() {
               <Link key={item.href} href={item.href} onClick={close} style={{
                 display: "flex", alignItems: "center", gap: "12px",
                 padding: "13px 24px 13px 32px",
-                color: "#374151", fontSize: "14px",
+                color: "#374151", fontSize: "14px", fontWeight: 600,
                 textDecoration: "none", borderBottom: "1px solid #f1f5f9",
                 background: "#fafafa",
               }}>
@@ -492,7 +533,7 @@ export default function Navbar() {
             {NAV_LINKS_RIGHT.map((item) => (
               <Link key={item.label} href={item.href} onClick={close} style={{
                 display: "block", padding: "16px 24px",
-                color: "#0A1628", fontSize: "15px", fontWeight: 500,
+                color: "#0A1628", fontSize: "15px", fontWeight: 600,
                 textDecoration: "none", borderBottom: "1px solid #f1f5f9",
               }}>{item.label}</Link>
             ))}
@@ -512,7 +553,7 @@ export default function Navbar() {
                 )}
                 <Link href="/dashboard" onClick={close} style={{
                   display: "flex", alignItems: "center", gap: "10px",
-                  padding: "16px 24px", color: "#0A1628", fontSize: "15px", fontWeight: 500,
+                  padding: "16px 24px", color: "#0A1628", fontSize: "15px", fontWeight: 600,
                   textDecoration: "none", borderBottom: "1px solid #f1f5f9",
                 }}>
                   <User size={17} color="#64748b" />
@@ -521,7 +562,7 @@ export default function Navbar() {
                 <button onClick={() => { handleLogout(); close() }} style={{
                   width: "100%", textAlign: "left",
                   display: "flex", alignItems: "center", gap: "10px",
-                  padding: "16px 24px", color: "#ef4444", fontSize: "15px", fontWeight: 500,
+                  padding: "16px 24px", color: "#ef4444", fontSize: "15px", fontWeight: 600,
                   background: "transparent", border: "none", borderBottom: "1px solid #f1f5f9",
                   cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
                 }}>

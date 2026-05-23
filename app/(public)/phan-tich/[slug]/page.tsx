@@ -167,8 +167,7 @@ export default async function ArticleDetailPage({
           .breadcrumb { padding: 10px 16px !important; }
           .breadcrumb-title { display: none !important; }
           .article-grid { grid-template-columns: 1fr !important; padding: 20px 0 !important; gap: 0 !important; }
-          .sidebar-left { order: 3 !important; position: static !important; }
-          .sidebar-left-prices { display: none !important; }
+          .sidebar-left { display: none !important; }
           .sidebar-right { display: none !important; }
           .article-main { order: 1 !important; }
           .related-grid { grid-template-columns: 1fr !important; }

@@ -109,6 +109,34 @@ export default function HomePage() {
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", background: "#fff" }}>
       <Navbar />
 
+      <style>{`
+        .home-hero { padding-top: 60px; }
+        @media (max-width: 768px) {
+          .home-hero {
+            grid-template-columns: 1fr !important;
+            padding: 80px 20px 40px !important;
+            gap: 32px !important;
+          }
+          .chart-card { display: none !important; }
+          .hero-h1 { font-size: 28px !important; }
+          .hero-btns { flex-direction: column !important; }
+          .hero-btns a { text-align: center !important; }
+          .hero-stats { gap: 20px !important; }
+          .why-section { padding: 40px 20px !important; }
+          .why-grid { grid-template-columns: 1fr 1fr !important; }
+          .services-section { padding: 40px 20px !important; }
+          .services-grid { grid-template-columns: 1fr !important; }
+          .articles-section { padding: 40px 20px !important; }
+          .articles-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+          .articles-grid { grid-template-columns: 1fr !important; }
+          .lead-section {
+            grid-template-columns: 1fr !important;
+            padding: 40px 20px !important;
+            gap: 32px !important;
+          }
+        }
+      `}</style>
+
       {/* HERO */}
       <div className="home-hero" style={{ background: "linear-gradient(135deg, #0A1628 0%, #0D1F38 60%, #0A1628 100%)", padding: "72px 80px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
         <div>

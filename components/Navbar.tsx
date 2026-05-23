@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 const NAV_LINKS = [
   { label: "Phân tích", href: "/phan-tich" },
@@ -38,24 +40,71 @@ const HOC_VIEN_MENU = [
 ]
 
 export default function Navbar() {
+  const router = useRouter()
+  const supabase = createClient()
+
+  // Auth state
+  const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
   // Desktop mega menu
   const [megaOpen, setMegaOpen] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setMegaOpen(true)
-  }
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => setMegaOpen(false), 150)
-  }
 
   // Mobile drawer
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [hocVienOpen, setHocVienOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
 
+  // ── Init auth ──────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    setMounted(true)
+
+    // Lấy session hiện tại
+    const initAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUser(user)
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single()
+        setProfile(data)
+      }
+    }
+    initAuth()
+
+    // Lắng nghe thay đổi auth (login/logout từ tab khác)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        supabase.from("profiles").select("full_name").eq("id", session.user.id).single()
+          .then(({ data }) => setProfile(data))
+      } else {
+        setUser(null)
+        setProfile(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Đóng user menu khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Lock scroll khi mở drawer
   useEffect(() => {
     const lock = drawerOpen ? "hidden" : ""
     document.body.style.overflow = lock
@@ -66,7 +115,31 @@ export default function Navbar() {
     }
   }, [drawerOpen])
 
+  // ── Actions ────────────────────────────────────────────────────────────────
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+    setUserMenuOpen(false)
+    router.push("/")
+    router.refresh()
+  }
+
   const close = () => setDrawerOpen(false)
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setMegaOpen(true)
+  }
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setMegaOpen(false), 150)
+  }
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Tài khoản"
+  const avatarLetter = displayName[0].toUpperCase()
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -90,6 +163,26 @@ export default function Navbar() {
           transition: background 0.12s;
         }
         .mega-item:hover { background: #f8fafc; }
+        .user-menu {
+          position: absolute; top: calc(100% + 10px); right: 0;
+          background: #0D1F38; border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+          padding: 6px; min-width: 200px; z-index: 200;
+          animation: fadeDown2 0.15s ease;
+        }
+        @keyframes fadeDown2 {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .user-menu-item {
+          display: block; padding: 10px 14px; border-radius: 8px;
+          font-size: 13px; text-decoration: none; color: rgba(255,255,255,0.7);
+          transition: background 0.12s, color 0.12s; cursor: pointer;
+          font-family: 'DM Sans', sans-serif; border: none; background: transparent;
+          width: 100%; text-align: left;
+        }
+        .user-menu-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .user-menu-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
         @keyframes slideInRight {
           from { transform: translateX(100%); }
           to   { transform: translateX(0); }
@@ -161,17 +254,78 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* ── RIGHT SIDE: Auth hoặc Login ── */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
-            <Link href="/dang-nhap" className="nb-desktop" style={{
-              color: "rgba(255,255,255,0.75)", fontSize: "13px", padding: "7px 16px",
-              border: "1px solid rgba(255,255,255,0.2)", borderRadius: "7px", textDecoration: "none",
-            }}>Đăng nhập</Link>
-            <Link href="/lien-he#dat-lich" className="nb-desktop" style={{
-              background: "#00C389", color: "#fff", fontSize: "13px",
-              padding: "8px 16px", borderRadius: "7px", textDecoration: "none", fontWeight: 500,
-            }}>Tư vấn miễn phí</Link>
+            {user ? (
+              /* ── ĐÃ ĐĂNG NHẬP ── */
+              <div ref={userMenuRef} style={{ position: "relative" }} className="nb-desktop">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    background: "rgba(0,195,137,0.08)", border: "1px solid rgba(0,195,137,0.2)",
+                    borderRadius: "8px", padding: "6px 12px 6px 6px",
+                    cursor: "pointer", transition: "border-color 0.15s",
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.4)")}
+                  onMouseOut={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.2)")}
+                >
+                  {/* Avatar */}
+                  <div style={{
+                    width: "28px", height: "28px", borderRadius: "50%",
+                    background: "linear-gradient(135deg, #00C389, #00966B)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "12px", fontWeight: 700, color: "#fff", flexShrink: 0,
+                  }}>
+                    {avatarLetter}
+                  </div>
+                  <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "13px", fontWeight: 500, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {displayName}
+                  </span>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, opacity: 0.4, transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
+                    <path d="M1 3l4 4 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
 
-            {/* ── HAMBURGER BUTTON (mobile only) ── */}
+                {/* Dropdown menu */}
+                {userMenuOpen && (
+                  <div className="user-menu">
+                    {/* User info header */}
+                    <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>{displayName}</div>
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{user.email}</div>
+                    </div>
+
+                    <Link href="/dashboard" className="user-menu-item" onClick={() => setUserMenuOpen(false)}>
+                      👤 &nbsp;Trang cá nhân
+                    </Link>
+                    <Link href="/dashboard" className="user-menu-item" onClick={() => setUserMenuOpen(false)}>
+                      🔖 &nbsp;Bài đã lưu
+                    </Link>
+
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", marginTop: "4px", paddingTop: "4px" }} />
+
+                    <button className="user-menu-item danger" onClick={handleLogout}>
+                      🚪 &nbsp;Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── CHƯA ĐĂNG NHẬP ── */
+              <>
+                <Link href="/dang-nhap" className="nb-desktop" style={{
+                  color: "rgba(255,255,255,0.75)", fontSize: "13px", padding: "7px 16px",
+                  border: "1px solid rgba(255,255,255,0.2)", borderRadius: "7px", textDecoration: "none",
+                }}>Đăng nhập</Link>
+                <Link href="/lien-he#dat-lich" className="nb-desktop" style={{
+                  background: "#00C389", color: "#fff", fontSize: "13px",
+                  padding: "8px 16px", borderRadius: "7px", textDecoration: "none", fontWeight: 500,
+                }}>Tư vấn miễn phí</Link>
+              </>
+            )}
+
+            {/* ── HAMBURGER (mobile) ── */}
             <button
               className="nb-hamburger"
               onClick={() => setDrawerOpen(true)}
@@ -190,15 +344,12 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* ── MOBILE DRAWER (portal ra body) ── */}
+      {/* ── MOBILE DRAWER ── */}
       {mounted && drawerOpen && createPortal(
         <div style={{
-          position: "fixed", inset: 0,
-          background: "#fff",
-          zIndex: 9999,
+          position: "fixed", inset: 0, background: "#fff", zIndex: 9999,
           display: "flex", flexDirection: "column",
-          animation: "slideInRight 0.28s ease",
-          overflowY: "auto",
+          animation: "slideInRight 0.28s ease", overflowY: "auto",
         }}>
           {/* Header */}
           <div style={{
@@ -217,6 +368,28 @@ export default function Navbar() {
               fontSize: "22px", color: "#64748b", lineHeight: 1, padding: "8px",
             }}>✕</button>
           </div>
+
+          {/* User info (mobile, nếu đã đăng nhập) */}
+          {user && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              padding: "16px 24px", background: "#f8fafc",
+              borderBottom: "1px solid #f1f5f9",
+            }}>
+              <div style={{
+                width: "38px", height: "38px", borderRadius: "50%",
+                background: "linear-gradient(135deg, #00C389, #00966B)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "14px", fontWeight: 700, color: "#fff", flexShrink: 0,
+              }}>
+                {avatarLetter}
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "#0A1628" }}>{displayName}</div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "1px" }}>{user.email}</div>
+              </div>
+            </div>
+          )}
 
           {/* Nav links */}
           <div style={{ flex: 1, padding: "8px 0" }}>
@@ -241,8 +414,7 @@ export default function Navbar() {
               <span style={{
                 fontSize: "12px", color: "#94a3b8",
                 transform: hocVienOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-                display: "inline-block",
+                transition: "transform 0.2s ease", display: "inline-block",
               }}>▼</span>
             </button>
 
@@ -273,26 +445,45 @@ export default function Navbar() {
               }}>{item.label}</Link>
             ))}
 
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid #f1f5f9" }}>
-              <Link href="/dang-nhap" onClick={close} style={{
-                display: "block", textAlign: "center",
-                padding: "12px", borderRadius: "10px",
-                color: "#0A1628", fontSize: "15px", fontWeight: 600,
-                textDecoration: "none",
-                border: "1.5px solid #e2e8f0",
-              }}>Đăng nhập</Link>
-            </div>
+            {user ? (
+              /* Mobile — đã đăng nhập */
+              <>
+                <Link href="/dashboard" onClick={close} style={{
+                  display: "block", padding: "16px 24px",
+                  color: "#0A1628", fontSize: "15px", fontWeight: 500,
+                  textDecoration: "none", borderBottom: "1px solid #f1f5f9",
+                }}>👤 Trang cá nhân</Link>
+                <button onClick={() => { handleLogout(); close() }} style={{
+                  width: "100%", textAlign: "left", padding: "16px 24px",
+                  color: "#ef4444", fontSize: "15px", fontWeight: 500,
+                  background: "transparent", border: "none", borderBottom: "1px solid #f1f5f9",
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                }}>🚪 Đăng xuất</button>
+              </>
+            ) : (
+              /* Mobile — chưa đăng nhập */
+              <div style={{ padding: "16px 24px", borderBottom: "1px solid #f1f5f9" }}>
+                <Link href="/dang-nhap" onClick={close} style={{
+                  display: "block", textAlign: "center",
+                  padding: "12px", borderRadius: "10px",
+                  color: "#0A1628", fontSize: "15px", fontWeight: 600,
+                  textDecoration: "none", border: "1.5px solid #e2e8f0",
+                }}>Đăng nhập</Link>
+              </div>
+            )}
           </div>
 
-          {/* CTA bottom */}
-          <div style={{ padding: "20px 24px", flexShrink: 0 }}>
-            <Link href="/lien-he#dat-lich" onClick={close} style={{
-              display: "block", textAlign: "center",
-              background: "#00C389", color: "#fff",
-              padding: "14px", borderRadius: "10px",
-              fontSize: "15px", fontWeight: 700, textDecoration: "none",
-            }}>Tư vấn miễn phí →</Link>
-          </div>
+          {/* CTA bottom — chỉ hiện khi chưa đăng nhập */}
+          {!user && (
+            <div style={{ padding: "20px 24px", flexShrink: 0 }}>
+              <Link href="/lien-he#dat-lich" onClick={close} style={{
+                display: "block", textAlign: "center",
+                background: "#00C389", color: "#fff",
+                padding: "14px", borderRadius: "10px",
+                fontSize: "15px", fontWeight: 700, textDecoration: "none",
+              }}>Tư vấn miễn phí →</Link>
+            </div>
+          )}
         </div>,
         document.body
       )}

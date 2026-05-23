@@ -49,6 +49,8 @@ export default function HomePage() {
   const [tickerOffset, setTickerOffset] = useState(0)
   const [form, setForm] = useState({ name: "", email: "", phone: "" })
   const [submitted, setSubmitted] = useState(false)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [submitError, setSubmitError] = useState("")
   const [articles, setArticles] = useState<Article[]>([])
   const [articlesLoading, setArticlesLoading] = useState(true)
   const [articlesError, setArticlesError] = useState<string | null>(null)
@@ -88,11 +90,38 @@ export default function HomePage() {
     return () => clearTimeout(timeout)
   }, [])
 
-  const handleSubmit = (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (!form.name || !form.email) return
-    setSubmitted(true)
+  const handleSubmit = async (e: React.MouseEvent) => {
+  e.preventDefault()
+  if (!form.name || !form.phone) return
+  setSubmitLoading(true)
+  setSubmitError("")
+  const supabase = createClient()
+  const { error } = await supabase.from("leads").insert({
+    full_name: form.name,
+    email: form.email || null,
+    phone: form.phone,
+    message: null,
+    source: "homepage",
+    status: "new",
+  })
+  setSubmitLoading(false)
+  if (error) {
+    if (error.code === "23505") {
+      if (error.message.includes("email")) {
+        setSubmitError("Email này đã được đăng ký trước đó!")
+      } else if (error.message.includes("phone")) {
+        setSubmitError("Số điện thoại này đã được đăng ký trước đó!")
+      } else {
+        setSubmitError("Thông tin này đã tồn tại trong hệ thống!")
+      }
+    } else {
+      setSubmitError("Có lỗi xảy ra, vui lòng thử lại!")
+    }
+    return
   }
+  setSubmitted(true)
+  setForm({ name: "", email: "", phone: "" })
+}
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", background: "#fff" }}>
@@ -301,8 +330,15 @@ export default function HomePage() {
                   />
                 </div>
               ))}
-              <button onClick={handleSubmit} style={{ width: "100%", background: "#00C389", color: "#fff", fontSize: "14px", fontWeight: 600, padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer", marginTop: "6px" }}>
-                Nhận báo cáo ngay →
+              {submitError && (
+  <p style={{ fontSize: "12px", color: "#dc2626", marginBottom: "8px",
+    background: "#fef2f2", padding: "8px 12px", borderRadius: "6px",
+    border: "1px solid #fecaca" }}>
+    ⚠️ {submitError}
+  </p>
+)}
+              <button onClick={handleSubmit} disabled={submitLoading} style={{ width: "100%", background: "#00C389", color: "#fff", fontSize: "14px", fontWeight: 600, padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer", marginTop: "6px" }}>
+                {submitLoading ? "Đang gửi..." : "Nhận báo cáo ngay →"}
               </button>
               <p style={{ fontSize: "11px", color: "#94a3b8", textAlign: "center", marginTop: "10px" }}>🔒 Thông tin của bạn được bảo mật tuyệt đối</p>
             </>

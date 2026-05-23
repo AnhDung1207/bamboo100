@@ -44,8 +44,9 @@ export default async function AdminDashboard() {
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
+
       {/* TOPBAR */}
-      <div style={{
+      <div className="admin-topbar" style={{
         background: "#fff", borderBottom: "0.5px solid #e2e8f0",
         padding: "14px 28px", display: "flex",
         alignItems: "center", justifyContent: "space-between",
@@ -68,9 +69,13 @@ export default async function AdminDashboard() {
         </Link>
       </div>
 
-      <div style={{ padding: "24px 28px" }}>
-        {/* STATS */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginBottom: "24px" }}>
+      <div className="admin-content" style={{ padding: "24px 28px" }}>
+
+        {/* STATS — 4 cột desktop, 2 cột mobile */}
+        <div className="admin-stats-grid" style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "14px", marginBottom: "24px",
+        }}>
           {stats.map((s) => (
             <div key={s.label} style={{
               background: "#fff", borderRadius: "12px",
@@ -78,10 +83,7 @@ export default async function AdminDashboard() {
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>{s.label}</span>
-                <div style={{
-                  width: "8px", height: "8px", borderRadius: "50%",
-                  background: s.color,
-                }} />
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: s.color }} />
               </div>
               <div style={{ fontSize: "28px", fontWeight: 700, color: "#0A1628" }}>{s.value}</div>
               <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>{s.sub}</div>
@@ -89,8 +91,8 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        {/* 2 COLUMNS */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* 2 COLUMNS — stack dọc trên mobile */}
+        <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
           {/* LEADS */}
           <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
@@ -99,7 +101,7 @@ export default async function AdminDashboard() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <i className="ti ti-users" style={{ fontSize: "15px", color: "#64748b" }} aria-hidden="true"></i>
+                <i className="ti ti-users" style={{ fontSize: "15px", color: "#64748b" }} />
                 <span style={{ fontSize: "14px", fontWeight: 500, color: "#0A1628" }}>Lead mới nhất</span>
               </div>
               <Link href="/admin/leads" style={{ fontSize: "12px", color: "#00C389", textDecoration: "none" }}>
@@ -151,7 +153,7 @@ export default async function AdminDashboard() {
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <i className="ti ti-file-text" style={{ fontSize: "15px", color: "#64748b" }} aria-hidden="true"></i>
+                <i className="ti ti-file-text" style={{ fontSize: "15px", color: "#64748b" }} />
                 <span style={{ fontSize: "14px", fontWeight: 500, color: "#0A1628" }}>Bài viết gần đây</span>
               </div>
               <Link href="/admin/bai-viet" style={{ fontSize: "12px", color: "#00C389", textDecoration: "none" }}>
@@ -196,16 +198,14 @@ export default async function AdminDashboard() {
                   }}>
                     {article.status === "published" ? "Đã đăng" : "Nháp"}
                   </span>
-                  <div style={{ display: "flex", gap: "4px" }}>
-                    <Link href={`/admin/bai-viet/${article.id}`} style={{
-                      width: "26px", height: "26px", borderRadius: "5px",
-                      background: "#f8fafc", border: "0.5px solid #e2e8f0",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "#64748b", textDecoration: "none", fontSize: "12px",
-                    }}>
-                      <i className="ti ti-edit" aria-hidden="true"></i>
-                    </Link>
-                  </div>
+                  <Link href={`/admin/bai-viet/${article.id}`} style={{
+                    width: "26px", height: "26px", borderRadius: "5px",
+                    background: "#f8fafc", border: "0.5px solid #e2e8f0",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#64748b", textDecoration: "none", fontSize: "12px",
+                  }}>
+                    <i className="ti ti-edit" />
+                  </Link>
                 </div>
               ))
             )}

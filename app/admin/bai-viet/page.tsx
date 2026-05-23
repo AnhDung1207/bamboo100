@@ -31,13 +31,8 @@ export default async function AdminBaiVietPage({
   const { count: draftCount } = await supabase.from("articles").select("*", { count: "exact", head: true }).eq("status", "draft")
 
   const CATEGORY_COLORS: Record<string, string> = {
-    "vang": "#EF9F27",
-    "dau-tho": "#E24B4A",
-    "ca-phe": "#BA7517",
-    "dong": "#D85A30",
-    "lua-mi": "#639922",
-    "bac": "#888780",
-    "khi-tu-nhien": "#378ADD",
+    "vang": "#EF9F27", "dau-tho": "#E24B4A", "ca-phe": "#BA7517",
+    "dong": "#D85A30", "lua-mi": "#639922", "bac": "#888780", "khi-tu-nhien": "#378ADD",
   }
 
   const filters = [
@@ -48,8 +43,35 @@ export default async function AdminBaiVietPage({
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .bv-topbar   { padding: 12px 16px !important; }
+          .bv-content  { padding: 16px !important; }
+          .bv-btn-text { display: none !important; }
+
+          /* Ẩn table header, hiện card */
+          .bv-table-header { display: none !important; }
+          .bv-table-row {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 14px 16px !important;
+          }
+          .bv-col-category,
+          .bv-col-views,
+          .bv-col-readtime { display: none !important; }
+          .bv-col-title { max-width: 100% !important; }
+          .bv-col-actions { justify-content: flex-start !important; }
+          .bv-row-meta {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+          }
+        }
+      `}</style>
+
       {/* TOPBAR */}
-      <div style={{
+      <div className="bv-topbar" style={{
         background: "#fff", borderBottom: "0.5px solid #e2e8f0",
         padding: "14px 28px", display: "flex",
         alignItems: "center", justifyContent: "space-between",
@@ -57,9 +79,7 @@ export default async function AdminBaiVietPage({
       }}>
         <div>
           <h1 style={{ fontSize: "16px", fontWeight: 600, color: "#0A1628" }}>Bài phân tích</h1>
-          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
-            Quản lý toàn bộ bài viết
-          </p>
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>Quản lý toàn bộ bài viết</p>
         </div>
         <Link href="/admin/bai-viet/tao-moi" style={{
           display: "flex", alignItems: "center", gap: "6px",
@@ -67,14 +87,14 @@ export default async function AdminBaiVietPage({
           fontSize: "13px", fontWeight: 500,
           padding: "8px 16px", borderRadius: "8px", textDecoration: "none",
         }}>
-          <i className="ti ti-plus" style={{ fontSize: "14px" }} aria-hidden="true"></i>
-          Viết bài mới
+          <i className="ti ti-plus" style={{ fontSize: "14px" }} />
+          <span className="bv-btn-text">Viết bài mới</span>
         </Link>
       </div>
 
-      <div style={{ padding: "24px 28px" }}>
+      <div className="bv-content" style={{ padding: "24px 28px" }}>
         {/* FILTERS */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
           {filters.map((f) => {
             const isActive = (!status && f.value === "all") || status === f.value
             return (
@@ -85,7 +105,6 @@ export default async function AdminBaiVietPage({
                   background: isActive ? "#0A1628" : "#fff",
                   color: isActive ? "#fff" : "#64748b",
                   border: `0.5px solid ${isActive ? "#0A1628" : "#e2e8f0"}`,
-                  cursor: "pointer",
                 }}>
                   {f.label}
                   <span style={{
@@ -101,12 +120,9 @@ export default async function AdminBaiVietPage({
         </div>
 
         {/* TABLE */}
-        <div style={{
-          background: "#fff", borderRadius: "12px",
-          border: "0.5px solid #e2e8f0", overflow: "hidden",
-        }}>
-          {/* Header */}
-          <div style={{
+        <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
+          {/* Header — ẩn trên mobile */}
+          <div className="bv-table-header" style={{
             display: "grid",
             gridTemplateColumns: "1fr 120px 100px 80px 80px 130px",
             padding: "10px 16px",
@@ -118,7 +134,6 @@ export default async function AdminBaiVietPage({
             ))}
           </div>
 
-          {/* Rows */}
           {!articles || articles.length === 0 ? (
             <div style={{ padding: "60px", textAlign: "center" }}>
               <div style={{ fontSize: "40px", marginBottom: "12px" }}>📝</div>
@@ -132,7 +147,7 @@ export default async function AdminBaiVietPage({
             </div>
           ) : (
             articles.map((article: any, i: number) => (
-              <div key={article.id} style={{
+              <div key={article.id} className="bv-table-row" style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 120px 100px 80px 80px 130px",
                 padding: "12px 16px",
@@ -140,7 +155,7 @@ export default async function AdminBaiVietPage({
                 alignItems: "center",
               }}>
                 {/* Title */}
-                <div>
+                <div className="bv-col-title">
                   <div style={{
                     fontSize: "13px", fontWeight: 500, color: "#0A1628",
                     whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
@@ -159,23 +174,39 @@ export default async function AdminBaiVietPage({
                       }}>PREMIUM</span>
                     )}
                   </div>
+                  {/* Meta chỉ hiện trên mobile */}
+                  <div className="bv-row-meta" style={{ display: "none", marginTop: "6px" }}>
+                    {article.categories && (
+                      <span style={{
+                        fontSize: "11px", fontWeight: 500,
+                        color: CATEGORY_COLORS[article.categories.slug] || "#64748b",
+                      }}>{article.categories.name}</span>
+                    )}
+                    <span style={{
+                      fontSize: "11px", fontWeight: 500, padding: "2px 8px",
+                      borderRadius: "20px",
+                      background: article.status === "published" ? "#F0FDF4" : "#F8FAFC",
+                      color: article.status === "published" ? "#15803D" : "#64748b",
+                      border: `0.5px solid ${article.status === "published" ? "#BBF7D0" : "#e2e8f0"}`,
+                    }}>
+                      {article.status === "published" ? "Đã đăng" : "Nháp"}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Category */}
-                <div>
+                {/* Category — ẩn mobile */}
+                <div className="bv-col-category">
                   {article.categories && (
-                    <span style={{
-                      fontSize: "11px", fontWeight: 500,
-                      color: CATEGORY_COLORS[article.categories.slug] || "#64748b",
-                    }}>{article.categories.name}</span>
+                    <span style={{ fontSize: "11px", fontWeight: 500, color: CATEGORY_COLORS[article.categories.slug] || "#64748b" }}>
+                      {article.categories.name}
+                    </span>
                   )}
                 </div>
 
-                {/* Status */}
-                <div>
+                {/* Status — ẩn mobile */}
+                <div className="bv-col-category">
                   <span style={{
-                    fontSize: "11px", fontWeight: 500, padding: "3px 10px",
-                    borderRadius: "20px",
+                    fontSize: "11px", fontWeight: 500, padding: "3px 10px", borderRadius: "20px",
                     background: article.status === "published" ? "#F0FDF4" : "#F8FAFC",
                     color: article.status === "published" ? "#15803D" : "#64748b",
                     border: `0.5px solid ${article.status === "published" ? "#BBF7D0" : "#e2e8f0"}`,
@@ -184,18 +215,20 @@ export default async function AdminBaiVietPage({
                   </span>
                 </div>
 
-                {/* Views */}
-                <div style={{ fontSize: "13px", color: "#64748b" }}>
+                {/* Views — ẩn mobile */}
+                <div className="bv-col-views" style={{ fontSize: "13px", color: "#64748b" }}>
                   {article.view_count || 0}
                 </div>
 
-                {/* Read time */}
-                <div style={{ fontSize: "13px", color: "#64748b" }}>
+                {/* Read time — ẩn mobile */}
+                <div className="bv-col-readtime" style={{ fontSize: "13px", color: "#64748b" }}>
                   {article.read_time ? `${article.read_time} phút` : "—"}
                 </div>
 
                 {/* Actions */}
-                <ArticleActions articleId={article.id} articleSlug={article.slug} />
+                <div className="bv-col-actions">
+                  <ArticleActions articleId={article.id} articleSlug={article.slug} />
+                </div>
               </div>
             ))
           )}

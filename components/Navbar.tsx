@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { User, Bookmark, LogOut, ChevronDown, LayoutDashboard } from "lucide-react"
 
 const NAV_LINKS = [
   { label: "Phân tích", href: "/phan-tich" },
@@ -43,46 +44,38 @@ export default function Navbar() {
   const router = useRouter()
   const supabase = createClient()
 
-  // Auth state
   const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null)
+  const [profile, setProfile] = useState<{ full_name: string | null; role: string | null } | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  // Desktop mega menu
   const [megaOpen, setMegaOpen] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Mobile drawer
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [hocVienOpen, setHocVienOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
 
-  // ── Init auth ──────────────────────────────────────────────────────────────
+  // ── SCROLL STATE ──
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-
-    // Lấy session hiện tại
     const initAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUser(user)
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .single()
+        const { data } = await supabase.from("profiles").select("full_name, role").eq("id", user.id).single()
         setProfile(data)
       }
     }
     initAuth()
 
-    // Lắng nghe thay đổi auth (login/logout từ tab khác)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user)
-        supabase.from("profiles").select("full_name").eq("id", session.user.id).single()
+        supabase.from("profiles").select("full_name, role").eq("id", session.user.id).single()
           .then(({ data }) => setProfile(data))
       } else {
         setUser(null)
@@ -90,10 +83,16 @@ export default function Navbar() {
       }
     })
 
-    return () => subscription.unsubscribe()
+    // ── SCROLL LISTENER ──
+    const handleScroll = () => setScrolled(window.scrollY > 80)
+    window.addEventListener("scroll", handleScroll, { passive: true })
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener("scroll", handleScroll)
+    }
   }, [])
 
-  // Đóng user menu khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -104,7 +103,12 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Lock scroll khi mở drawer
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   useEffect(() => {
     const lock = drawerOpen ? "hidden" : ""
     document.body.style.overflow = lock
@@ -114,8 +118,6 @@ export default function Navbar() {
       document.documentElement.style.overflow = ""
     }
   }, [drawerOpen])
-
-  // ── Actions ────────────────────────────────────────────────────────────────
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -138,8 +140,33 @@ export default function Navbar() {
 
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Tài khoản"
   const avatarLetter = displayName[0].toUpperCase()
+  const isAdminOrEditor = profile?.role === "admin" || profile?.role === "editor"
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // Scroll-based smooth transition: ratio 0 = top (transparent), 1 = scrolled (white)
+  const SCROLL_THRESHOLD = 300
+  const ratio = Math.min(scrollY / SCROLL_THRESHOLD, 1)
+  const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t)
+
+  // Nav background: transparent → white
+  const navBg = `rgba(255,255,255,${ratio})`
+  const borderColor = `rgba(0,0,0,${0.08 * ratio})`
+  const boxShadow = ratio > 0.05 ? `0 2px 20px rgba(0,0,0,${0.08 * ratio})` : "none"
+
+  // Nav link colors: white mờ → dark
+  const linkColor = `rgba(${lerp(255,15,ratio)},${lerp(255,25,ratio)},${lerp(255,50,ratio)},${(0.65 + 0.15 * ratio).toFixed(2)})`
+  // "BAMBOO" text: white → #0A1628
+  const logoColor = `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+  // Login button
+  const loginColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.75 + 0.25 * ratio).toFixed(2)})`
+  const loginBorder = `1px solid rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.2 + 0.1 * ratio).toFixed(2)})`
+  // Hamburger lines
+  const hamColor = `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+
+  // User button: adapt theo scroll (dark theme u2192 light theme)
+  const userBtnBg = `rgba(0,195,137,${(lerp(8, 12, ratio) / 100).toFixed(2)})`
+  const userBtnBorder = `1px solid rgba(0,195,137,${(lerp(20, 45, ratio) / 100).toFixed(2)})`
+  const userNameColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.85)`
+  const chevronColor = `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.4)`
 
   return (
     <>
@@ -165,9 +192,9 @@ export default function Navbar() {
         .mega-item:hover { background: #f8fafc; }
         .user-menu {
           position: absolute; top: calc(100% + 10px); right: 0;
-          background: #0D1F38; border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-          padding: 6px; min-width: 200px; z-index: 200;
+          background: #fff; border: 0.5px solid #e2e8f0;
+          border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+          padding: 6px; min-width: 210px; z-index: 200;
           animation: fadeDown2 0.15s ease;
         }
         @keyframes fadeDown2 {
@@ -175,14 +202,15 @@ export default function Navbar() {
           to   { opacity: 1; transform: translateY(0); }
         }
         .user-menu-item {
-          display: block; padding: 10px 14px; border-radius: 8px;
-          font-size: 13px; text-decoration: none; color: rgba(255,255,255,0.7);
+          display: flex; align-items: center; gap: 9px;
+          padding: 10px 14px; border-radius: 8px;
+          font-size: 13px; text-decoration: none; color: #475569;
           transition: background 0.12s, color 0.12s; cursor: pointer;
           font-family: 'DM Sans', sans-serif; border: none; background: transparent;
           width: 100%; text-align: left;
         }
-        .user-menu-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .user-menu-item.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .user-menu-item:hover { background: #f8fafc; color: #0A1628; }
+        .user-menu-item.danger:hover { background: rgba(239,68,68,0.06); color: #ef4444; }
         @keyframes slideInRight {
           from { transform: translateX(100%); }
           to   { transform: translateX(0); }
@@ -193,17 +221,20 @@ export default function Navbar() {
         }
       `}</style>
 
-      <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }}>
         <nav style={{
-          background: "#0A1628", display: "flex", alignItems: "center",
+          background: navBg,
+          boxShadow,
+          transition: "background 0.25s ease, box-shadow 0.25s ease",
+          display: "flex", alignItems: "center",
           justifyContent: "space-between", padding: "0 40px", height: "60px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: `1px solid ${borderColor}`,
           position: "relative", zIndex: 100,
         }}>
           {/* Logo */}
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
             <img src="/o.png" alt="BAMBOO100" style={{ width: "34px", height: "34px", borderRadius: "8px" }} />
-            <span style={{ color: "#fff", fontSize: "15px", fontWeight: 600, letterSpacing: "0.04em" }}>
+            <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "0.04em", color: logoColor, transition: "color 0.35s" }}>
               BAMBOO<span style={{ color: "#00C389" }}>100</span>
             </span>
           </Link>
@@ -212,17 +243,18 @@ export default function Navbar() {
           <div className="nb-desktop" style={{ position: "relative" }}>
             {NAV_LINKS.map((item) => (
               <Link key={item.label} href={item.href} style={{
-                color: "rgba(255,255,255,0.65)", fontSize: "13px",
+                color: linkColor, fontSize: "13px",
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
+                transition: "color 0.35s",
               }}>{item.label}</Link>
             ))}
 
             {/* Học viện mega menu */}
             <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "relative" }}>
               <Link href="/hoc-vien" style={{
-                color: "rgba(255,255,255,0.65)", fontSize: "13px",
+                color: linkColor, fontSize: "13px",
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
-                display: "flex", alignItems: "center",
+                display: "flex", alignItems: "center", transition: "color 0.35s",
               }}>Học viện</Link>
 
               {megaOpen && (
@@ -248,29 +280,28 @@ export default function Navbar() {
 
             {NAV_LINKS_RIGHT.map((item) => (
               <Link key={item.label} href={item.href} style={{
-                color: "rgba(255,255,255,0.65)", fontSize: "13px",
+                color: linkColor, fontSize: "13px",
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
+                transition: "color 0.35s",
               }}>{item.label}</Link>
             ))}
           </div>
 
-          {/* ── RIGHT SIDE: Auth hoặc Login ── */}
+          {/* ── RIGHT SIDE ── */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
             {user ? (
-              /* ── ĐÃ ĐĂNG NHẬP ── */
               <div ref={userMenuRef} style={{ position: "relative" }} className="nb-desktop">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   style={{
                     display: "flex", alignItems: "center", gap: "8px",
-                    background: "rgba(0,195,137,0.08)", border: "1px solid rgba(0,195,137,0.2)",
+                    background: userBtnBg, border: userBtnBorder,
                     borderRadius: "8px", padding: "6px 12px 6px 6px",
-                    cursor: "pointer", transition: "border-color 0.15s",
+                    cursor: "pointer", transition: "background 0.25s ease, border-color 0.25s ease",
                   }}
-                  onMouseOver={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.4)")}
-                  onMouseOut={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.2)")}
+                  onMouseOver={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.6)")}
+                  onMouseOut={e => (e.currentTarget.style.borderColor = "")}
                 >
-                  {/* Avatar */}
                   <div style={{
                     width: "28px", height: "28px", borderRadius: "50%",
                     background: "linear-gradient(135deg, #00C389, #00966B)",
@@ -279,44 +310,56 @@ export default function Navbar() {
                   }}>
                     {avatarLetter}
                   </div>
-                  <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "13px", fontWeight: 500, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <span style={{ color: userNameColor, fontSize: "13px", fontWeight: 500, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.25s ease" }}>
                     {displayName}
                   </span>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0, opacity: 0.4, transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
-                    <path d="M1 3l4 4 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <ChevronDown
+                    size={13}
+                    color={chevronColor}
+                    style={{ flexShrink: 0, transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s, color 0.25s ease" }}
+                  />
                 </button>
 
-                {/* Dropdown menu */}
                 {userMenuOpen && (
                   <div className="user-menu">
-                    {/* User info header */}
-                    <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: "4px" }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>{displayName}</div>
-                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{user.email}</div>
+                    <div style={{ padding: "10px 14px 8px", borderBottom: "0.5px solid #f1f5f9", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628" }}>{displayName}</div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>{user.email}</div>
                     </div>
 
+                    {isAdminOrEditor && (
+                      <>
+                        <Link href="/admin" className="user-menu-item" onClick={() => setUserMenuOpen(false)} style={{ color: "#00C389" }}>
+                          <LayoutDashboard size={14} />
+                          Admin Panel
+                        </Link>
+                        <div style={{ borderTop: "0.5px solid #f1f5f9", margin: "4px 0" }} />
+                      </>
+                    )}
                     <Link href="/dashboard" className="user-menu-item" onClick={() => setUserMenuOpen(false)}>
-                      👤 &nbsp;Trang cá nhân
+                      <User size={14} />
+                      Trang cá nhân
                     </Link>
                     <Link href="/dashboard" className="user-menu-item" onClick={() => setUserMenuOpen(false)}>
-                      🔖 &nbsp;Bài đã lưu
+                      <Bookmark size={14} />
+                      Bài đã lưu
                     </Link>
 
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", marginTop: "4px", paddingTop: "4px" }} />
+                    <div style={{ borderTop: "0.5px solid #f1f5f9", marginTop: "4px", paddingTop: "4px" }} />
 
                     <button className="user-menu-item danger" onClick={handleLogout}>
-                      🚪 &nbsp;Đăng xuất
+                      <LogOut size={14} />
+                      Đăng xuất
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              /* ── CHƯA ĐĂNG NHẬP ── */
               <>
                 <Link href="/dang-nhap" className="nb-desktop" style={{
-                  color: "rgba(255,255,255,0.75)", fontSize: "13px", padding: "7px 16px",
-                  border: "1px solid rgba(255,255,255,0.2)", borderRadius: "7px", textDecoration: "none",
+                  color: loginColor, fontSize: "13px", padding: "7px 16px",
+                  border: loginBorder, borderRadius: "7px", textDecoration: "none",
+                  transition: "color 0.35s, border 0.35s",
                 }}>Đăng nhập</Link>
                 <Link href="/lien-he#dat-lich" className="nb-desktop" style={{
                   background: "#00C389", color: "#fff", fontSize: "13px",
@@ -325,7 +368,7 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ── HAMBURGER (mobile) ── */}
+            {/* Hamburger */}
             <button
               className="nb-hamburger"
               onClick={() => setDrawerOpen(true)}
@@ -337,7 +380,11 @@ export default function Navbar() {
               }}
             >
               {[0, 1, 2].map(i => (
-                <span key={i} style={{ display: "block", width: "22px", height: "2px", background: "#fff", borderRadius: "2px" }} />
+                <span key={i} style={{
+                  display: "block", width: "22px", height: "2px",
+                  background: hamColor, borderRadius: "2px",
+                  transition: "background 0.35s",
+                }} />
               ))}
             </button>
           </div>
@@ -365,11 +412,16 @@ export default function Navbar() {
             </Link>
             <button onClick={close} style={{
               background: "transparent", border: "none", cursor: "pointer",
-              fontSize: "22px", color: "#64748b", lineHeight: 1, padding: "8px",
-            }}>✕</button>
+              color: "#64748b", lineHeight: 1, padding: "8px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M2 2l14 14M16 2L2 16" stroke="#64748b" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
           </div>
 
-          {/* User info (mobile, nếu đã đăng nhập) */}
+          {/* User info */}
           {user && (
             <div style={{
               display: "flex", alignItems: "center", gap: "12px",
@@ -401,7 +453,7 @@ export default function Navbar() {
               }}>{item.label}</Link>
             ))}
 
-            {/* Học viện — accordion */}
+            {/* Học viện accordion */}
             <button
               onClick={() => setHocVienOpen(!hocVienOpen)}
               style={{
@@ -411,11 +463,11 @@ export default function Navbar() {
               }}
             >
               <span style={{ color: "#0A1628", fontSize: "15px", fontWeight: 500 }}>Học viện</span>
-              <span style={{
-                fontSize: "12px", color: "#94a3b8",
-                transform: hocVienOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease", display: "inline-block",
-              }}>▼</span>
+              <ChevronDown
+                size={16}
+                color="#94a3b8"
+                style={{ transform: hocVienOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+              />
             </button>
 
             {hocVienOpen && HOC_VIEN_MENU.map((item) => (
@@ -446,22 +498,38 @@ export default function Navbar() {
             ))}
 
             {user ? (
-              /* Mobile — đã đăng nhập */
               <>
+                {isAdminOrEditor && (
+                  <Link href="/admin" onClick={close} style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    padding: "16px 24px", color: "#00C389", fontSize: "15px", fontWeight: 600,
+                    textDecoration: "none", borderBottom: "1px solid #f1f5f9",
+                    background: "rgba(0,195,137,0.04)",
+                  }}>
+                    <LayoutDashboard size={17} color="#00C389" />
+                    Admin Panel
+                  </Link>
+                )}
                 <Link href="/dashboard" onClick={close} style={{
-                  display: "block", padding: "16px 24px",
-                  color: "#0A1628", fontSize: "15px", fontWeight: 500,
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "16px 24px", color: "#0A1628", fontSize: "15px", fontWeight: 500,
                   textDecoration: "none", borderBottom: "1px solid #f1f5f9",
-                }}>👤 Trang cá nhân</Link>
+                }}>
+                  <User size={17} color="#64748b" />
+                  Trang cá nhân
+                </Link>
                 <button onClick={() => { handleLogout(); close() }} style={{
-                  width: "100%", textAlign: "left", padding: "16px 24px",
-                  color: "#ef4444", fontSize: "15px", fontWeight: 500,
+                  width: "100%", textAlign: "left",
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "16px 24px", color: "#ef4444", fontSize: "15px", fontWeight: 500,
                   background: "transparent", border: "none", borderBottom: "1px solid #f1f5f9",
                   cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                }}>🚪 Đăng xuất</button>
+                }}>
+                  <LogOut size={17} color="#ef4444" />
+                  Đăng xuất
+                </button>
               </>
             ) : (
-              /* Mobile — chưa đăng nhập */
               <div style={{ padding: "16px 24px", borderBottom: "1px solid #f1f5f9" }}>
                 <Link href="/dang-nhap" onClick={close} style={{
                   display: "block", textAlign: "center",
@@ -473,7 +541,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* CTA bottom — chỉ hiện khi chưa đăng nhập */}
           {!user && (
             <div style={{ padding: "20px 24px", flexShrink: 0 }}>
               <Link href="/lien-he#dat-lich" onClick={close} style={{

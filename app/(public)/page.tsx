@@ -5,16 +5,6 @@ import Link from "next/link"
 import Navbar from "@/components/Navbar"
 import { createClient } from "@/lib/supabase/client"
 
-const PRICES = [
-  { name: "VÀNG", symbol: "XAU/USD", price: "2,342.50", change: "+0.84%", up: true },
-  { name: "DẦU WTI", symbol: "CRUDE", price: "78.12", change: "-0.31%", up: false },
-  { name: "CÀ PHÊ", symbol: "COFFEE", price: "4,820", change: "+1.24%", up: true },
-  { name: "ĐỒNG", symbol: "COPPER", price: "9,124", change: "+0.52%", up: true },
-  { name: "LÚA MÌ", symbol: "WHEAT", price: "562.80", change: "-0.18%", up: false },
-  { name: "BẠC", symbol: "XAG/USD", price: "27.45", change: "+0.63%", up: true },
-  { name: "KHÍ TỰ NHIÊN", symbol: "NATGAS", price: "2.14", change: "-1.02%", up: false },
-]
-
 const WHY = [
   { icon: "📊", title: "Dữ liệu cung-cầu thực", desc: "Phân tích từ báo cáo tồn kho, sản lượng và dòng tiền thực tế — không phỏng đoán." },
   { icon: "🛡️", title: "Quản trị rủi ro", desc: "Mỗi chiến lược đi kèm tỷ lệ Risk/Reward và mức dừng lỗ cụ thể." },
@@ -46,7 +36,6 @@ function formatDate(dateStr: string | null) {
 }
 
 export default function HomePage() {
-  const [tickerOffset, setTickerOffset] = useState(0)
   const [form, setForm] = useState({ name: "", email: "", phone: "" })
   const [submitted, setSubmitted] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -54,13 +43,6 @@ export default function HomePage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [articlesLoading, setArticlesLoading] = useState(true)
   const [articlesError, setArticlesError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTickerOffset((prev) => (prev - 1) % 800)
-    }, 30)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -91,54 +73,41 @@ export default function HomePage() {
   }, [])
 
   const handleSubmit = async (e: React.MouseEvent) => {
-  e.preventDefault()
-  if (!form.name || !form.phone) return
-  setSubmitLoading(true)
-  setSubmitError("")
-  const supabase = createClient()
-  const { error } = await supabase.from("leads").insert({
-    full_name: form.name,
-    email: form.email || null,
-    phone: form.phone,
-    message: null,
-    source: "homepage",
-    status: "new",
-  })
-  setSubmitLoading(false)
-  if (error) {
-    if (error.code === "23505") {
-      if (error.message.includes("email")) {
-        setSubmitError("Email này đã được đăng ký trước đó!")
-      } else if (error.message.includes("phone")) {
-        setSubmitError("Số điện thoại này đã được đăng ký trước đó!")
+    e.preventDefault()
+    if (!form.name || !form.phone) return
+    setSubmitLoading(true)
+    setSubmitError("")
+    const supabase = createClient()
+    const { error } = await supabase.from("leads").insert({
+      full_name: form.name,
+      email: form.email || null,
+      phone: form.phone,
+      message: null,
+      source: "homepage",
+      status: "new",
+    })
+    setSubmitLoading(false)
+    if (error) {
+      if (error.code === "23505") {
+        if (error.message.includes("email")) {
+          setSubmitError("Email này đã được đăng ký trước đó!")
+        } else if (error.message.includes("phone")) {
+          setSubmitError("Số điện thoại này đã được đăng ký trước đó!")
+        } else {
+          setSubmitError("Thông tin này đã tồn tại trong hệ thống!")
+        }
       } else {
-        setSubmitError("Thông tin này đã tồn tại trong hệ thống!")
+        setSubmitError("Có lỗi xảy ra, vui lòng thử lại!")
       }
-    } else {
-      setSubmitError("Có lỗi xảy ra, vui lòng thử lại!")
+      return
     }
-    return
+    setSubmitted(true)
+    setForm({ name: "", email: "", phone: "" })
   }
-  setSubmitted(true)
-  setForm({ name: "", email: "", phone: "" })
-}
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", background: "#fff" }}>
       <Navbar />
-
-      {/* TICKER */}
-      <div style={{ background: "#0D1F38", padding: "8px 0", overflow: "hidden", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <div style={{ display: "flex", gap: "40px", transform: `translateX(${tickerOffset}px)`, whiteSpace: "nowrap", width: "max-content" }}>
-          {[...PRICES, ...PRICES].map((p, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", fontWeight: 500, letterSpacing: "0.06em" }}>{p.name}</span>
-              <span style={{ color: "#fff", fontSize: "12px", fontWeight: 600 }}>{p.price}</span>
-              <span style={{ color: p.up ? "#00C389" : "#E24B4A", fontSize: "11px" }}>{p.up ? "▲" : "▼"} {p.change}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* HERO */}
       <div className="home-hero" style={{ background: "linear-gradient(135deg, #0A1628 0%, #0D1F38 60%, #0A1628 100%)", padding: "72px 80px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
@@ -331,12 +300,10 @@ export default function HomePage() {
                 </div>
               ))}
               {submitError && (
-  <p style={{ fontSize: "12px", color: "#dc2626", marginBottom: "8px",
-    background: "#fef2f2", padding: "8px 12px", borderRadius: "6px",
-    border: "1px solid #fecaca" }}>
-    ⚠️ {submitError}
-  </p>
-)}
+                <p style={{ fontSize: "12px", color: "#dc2626", marginBottom: "8px", background: "#fef2f2", padding: "8px 12px", borderRadius: "6px", border: "1px solid #fecaca" }}>
+                  ⚠️ {submitError}
+                </p>
+              )}
               <button onClick={handleSubmit} disabled={submitLoading} style={{ width: "100%", background: "#00C389", color: "#fff", fontSize: "14px", fontWeight: 600, padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer", marginTop: "6px" }}>
                 {submitLoading ? "Đang gửi..." : "Nhận báo cáo ngay →"}
               </button>

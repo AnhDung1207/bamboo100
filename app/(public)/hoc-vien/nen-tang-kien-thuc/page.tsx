@@ -96,10 +96,7 @@ export default async function NenTangKienThucPage({
       <Navbar />
 
       {/* HERO */}
-      <div className="kt-hero" style={{ textAlign: "center", padding: "56px 40px 36px" }}>
-        <p style={{ fontSize: "12px", color: "#64748b", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
-          Nền tảng Kiến thức
-        </p>
+      <div className="kt-hero" style={{ textAlign: "center", padding: "80px 40px 36px" }}>
         <h1 style={{ fontSize: "36px", fontWeight: 700, color: "#0A1628", marginBottom: "24px", letterSpacing: "-0.02em" }}>
           Kiến thức nền tảng
         </h1>

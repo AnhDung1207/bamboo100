@@ -53,6 +53,9 @@ const CATEGORY_THUMBNAILS: Record<string, string> = {
   "dau-dau-tuong": "/thumbnails/dau-dau-tuong.png",
   "kho-dau-tuong": "/thumbnails/kho-dau-tuong.png",
   "gao": "/thumbnails/gao-tho.png",
+  "hot-news": "/thumbnails/hot-news.png",
+  "phan-tich-ky-thuat": "/thumbnails/phan-tich-ky-thuat.png",
+  "bao-cao-kinh-te": "/thumbnails/bao-cao-kinh-te.png",
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -111,7 +114,8 @@ function groupByDate(articles: any[]) {
 function FeaturedCard({ article }: { article: any }) {
   const catSlug = article.categories?.slug || ""
   const catColor = CATEGORY_COLORS[catSlug] || "#00C389"
-  const thumbnail = CATEGORY_THUMBNAILS[catSlug]
+  const groupSlug = article.product_groups?.slug || ""
+const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
   const hasBgImage = !!article.thumbnail_url
 
   // Map slug sản phẩm → nhóm ngành
@@ -219,7 +223,8 @@ function FeaturedCard({ article }: { article: any }) {
 function SmallCard({ article }: { article: any }) {
   const catSlug = article.categories?.slug || ""
   const catIcon = CATEGORY_ICONS[catSlug] || "📊"
-  const thumbnail = CATEGORY_THUMBNAILS[catSlug]
+  const groupSlug = article.product_groups?.slug || ""
+const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
 
   const GROUP_MAP: Record<string, string> = {
     "vang": "Kim Loại", "bac": "Kim Loại", "dong": "Kim Loại",

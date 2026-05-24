@@ -24,6 +24,7 @@ export default async function PhanTichPage({
       id, title, slug, excerpt, thumbnail_url,
       is_premium, is_hot, view_count, read_time, published_at,
       categories(id, name, slug, color),
+      product_groups(slug),
       profiles(full_name)
     `)
     .eq("status", "published")

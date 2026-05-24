@@ -6,52 +6,72 @@ import { createClient } from "@/lib/supabase/client"
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 
+// adminOnly: true → chỉ admin thấy | false → cả admin lẫn editor thấy
 const NAV = [
   {
     section: "Tổng quan",
     items: [
-      { label: "Dashboard", href: "/admin", icon: "ti-layout-dashboard" },
+      { label: "Dashboard",    href: "/admin",           icon: "ti-layout-dashboard", adminOnly: false },
     ],
   },
   {
     section: "Nội dung",
     items: [
-      { label: "Bài phân tích", href: "/admin/bai-viet", icon: "ti-file-text" },
-      { label: "Khóa học", href: "/admin/khoa-hoc", icon: "ti-school" },
-      { label: "Ebook", href: "/admin/ebook", icon: "ti-book" },
-      { label: "Sự kiện", href: "/admin/su-kien", icon: "ti-calendar-event" },
+      { label: "Bài phân tích", href: "/admin/bai-viet", icon: "ti-file-text",       adminOnly: false },
+      { label: "Khóa học",      href: "/admin/khoa-hoc", icon: "ti-school",           adminOnly: false },
+      { label: "Ebook",         href: "/admin/ebook",    icon: "ti-book",             adminOnly: false },
+      { label: "Sự kiện",       href: "/admin/su-kien",  icon: "ti-calendar-event",   adminOnly: false },
     ],
   },
   {
     section: "Kinh doanh",
     items: [
-      { label: "Lead", href: "/admin/leads", icon: "ti-users" },
-      { label: "Tư vấn", href: "/admin/tu-van", icon: "ti-calendar-check" },
+      { label: "Lead",   href: "/admin/leads",  icon: "ti-users",          adminOnly: true },
+      { label: "Tư vấn", href: "/admin/tu-van", icon: "ti-calendar-check", adminOnly: true },
     ],
   },
   {
     section: "Hệ thống",
     items: [
-      { label: "Người dùng", href: "/admin/nguoi-dung", icon: "ti-user-circle" },
-      { label: "Cài đặt", href: "/admin/cai-dat", icon: "ti-settings" },
+      { label: "Người dùng", href: "/admin/nguoi-dung", icon: "ti-user-circle", adminOnly: true },
+      { label: "Cài đặt",    href: "/admin/cai-dat",    icon: "ti-settings",    adminOnly: true },
     ],
   },
 ]
 
-// 4 mục chính trên bottom nav
-const BOTTOM_NAV = [
-  { label: "Dashboard", href: "/admin", icon: "ti-layout-dashboard" },
-  { label: "Bài viết", href: "/admin/bai-viet", icon: "ti-file-text" },
-  { label: "Lead", href: "/admin/leads", icon: "ti-users" },
+const BOTTOM_NAV_ADMIN  = [
+  { label: "Dashboard", href: "/admin",           icon: "ti-layout-dashboard" },
+  { label: "Bài viết",  href: "/admin/bai-viet",  icon: "ti-file-text" },
+  { label: "Lead",      href: "/admin/leads",      icon: "ti-users" },
+]
+const BOTTOM_NAV_EDITOR = [
+  { label: "Dashboard", href: "/admin",           icon: "ti-layout-dashboard" },
+  { label: "Bài viết",  href: "/admin/bai-viet",  icon: "ti-file-text" },
+  { label: "Ebook",     href: "/admin/ebook",      icon: "ti-book" },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const router   = useRouter()
 
-  useEffect(() => { setMounted(true) }, [])
+  const [role,       setRole]       = useState<string | null>(null)
+  const [roleLoaded, setRoleLoaded] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mounted,    setMounted]    = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const init = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from("profiles").select("role").eq("id", user.id).single()
+      setRole(data?.role ?? null)
+      setRoleLoaded(true)
+    }
+    init()
+  }, [])
 
   useEffect(() => {
     const lock = drawerOpen ? "hidden" : ""
@@ -66,6 +86,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.refresh()
   }
 
+  const isAdmin  = role === "admin"
+  const isEditor = role === "editor"
+
+  const filteredNav = NAV.map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.adminOnly || isAdmin),
+  })).filter(group => group.items.length > 0)
+
+  const bottomNav = isEditor ? BOTTOM_NAV_EDITOR : BOTTOM_NAV_ADMIN
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans', 'Inter', sans-serif" }}>
       <style>{`
@@ -73,38 +103,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           from { transform: translateX(100%); }
           to   { transform: translateX(0); }
         }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
 
-        /* Desktop: sidebar hiện, bottom nav ẩn */
         .admin-sidebar    { display: flex !important; }
         .admin-main       { margin-left: 220px !important; padding-bottom: 0 !important; }
         .admin-bottom-nav { display: none !important; }
 
-        /* Mobile */
         @media (max-width: 767px) {
           .admin-sidebar    { display: none !important; }
           .admin-main       { margin-left: 0 !important; padding-bottom: 72px !important; }
           .admin-bottom-nav { display: flex !important; }
-
-          /* Stats 2x2 */
           .admin-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-
-          /* Columns stack */
           .admin-two-col    { grid-template-columns: 1fr !important; }
-
-          /* Topbar padding */
           .admin-topbar     { padding: 12px 16px !important; }
           .admin-content    { padding: 16px !important; }
         }
       `}</style>
 
-      {/* ── SIDEBAR (desktop only) ── */}
+      {/* ── SIDEBAR ── */}
       <div className="admin-sidebar" style={{
-        width: "220px", background: "#0A1628",
-        flexDirection: "column",
-        flexShrink: 0, position: "fixed",
-        top: 0, left: 0, bottom: 0, zIndex: 50,
+        width: "220px", background: "#0A1628", flexDirection: "column",
+        flexShrink: 0, position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,
       }}>
-        {/* Logo */}
+        {/* Logo + editor badge */}
         <div style={{
           padding: "16px", display: "flex", alignItems: "center", gap: "10px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -114,13 +138,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div style={{ color: "#fff", fontSize: "13px", fontWeight: 600, letterSpacing: "0.04em" }}>
               BAMBOO<span style={{ color: "#00C389" }}>100</span>
             </div>
-            <div style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>Admin Panel</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px", marginTop: "2px" }}>
+              <div style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>Admin Panel</div>
+              {roleLoaded && isEditor && (
+                <span style={{
+                  fontSize: "9px", fontWeight: 600, color: "#EF9F27",
+                  background: "rgba(239,159,39,0.15)", padding: "1px 6px",
+                  borderRadius: "20px", letterSpacing: "0.04em",
+                }}>EDITOR</span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Nav */}
+        {/* Nav — filtered theo role */}
         <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          {NAV.map((group) => (
+          {filteredNav.map((group) => (
             <div key={group.section}>
               <p style={{
                 padding: "12px 16px 4px", fontSize: "10px", fontWeight: 500,
@@ -173,12 +206,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* ── MAIN CONTENT ── */}
+      {/* ── MAIN ── */}
       <div className="admin-main" style={{ flex: 1, background: "#f8fafc", minHeight: "100vh" }}>
         {children}
       </div>
 
-      {/* ── BOTTOM NAV (mobile only) ── */}
+      {/* ── BOTTOM NAV (mobile) ── */}
       <div className="admin-bottom-nav" style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
         height: "64px", background: "#0A1628",
@@ -186,7 +219,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         zIndex: 50, alignItems: "center", justifyContent: "around",
         padding: "0 8px",
       }}>
-        {BOTTOM_NAV.map((item) => {
+        {bottomNav.map((item) => {
           const isActive = pathname === item.href ||
             (item.href !== "/admin" && pathname.startsWith(item.href))
           return (
@@ -202,7 +235,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           )
         })}
 
-        {/* Nút "Thêm" mở drawer */}
         <button onClick={() => setDrawerOpen(true)} style={{
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: "3px",
@@ -215,32 +247,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
       </div>
 
-      {/* ── DRAWER "Thêm" (mobile) ── */}
+      {/* ── DRAWER mobile ── */}
       {mounted && drawerOpen && createPortal(
         <div style={{
           position: "fixed", inset: 0, zIndex: 9999,
           display: "flex", flexDirection: "column", justifyContent: "flex-end",
         }}>
-          {/* Backdrop */}
           <div onClick={() => setDrawerOpen(false)} style={{
             position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)",
           }} />
-
-          {/* Sheet trượt lên từ dưới */}
           <div style={{
             position: "relative", background: "#0A1628",
             borderRadius: "16px 16px 0 0",
             padding: "16px 0 80px",
             animation: "slideUp 0.25s ease",
           }}>
-            <style>{`
-              @keyframes slideUp {
-                from { transform: translateY(100%); }
-                to   { transform: translateY(0); }
-              }
-            `}</style>
-
-            {/* Nút ✕ float góc trên phải — sticky */}
             <button onClick={() => setDrawerOpen(false)} style={{
               position: "sticky", top: "12px",
               float: "right", marginRight: "16px", marginBottom: "-44px",
@@ -251,7 +272,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               zIndex: 2, flexShrink: 0,
             }}>✕</button>
 
-            {NAV.slice(1).map((group) => (
+            {filteredNav.slice(1).map((group) => (
               <div key={group.section}>
                 <p style={{
                   padding: "10px 20px 4px", fontSize: "10px", fontWeight: 500,
@@ -280,7 +301,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
             ))}
 
-            {/* Logout + Home */}
             <div style={{ padding: "12px 20px 0", display: "flex", flexDirection: "column", gap: "4px" }}>
               <Link href="/" onClick={() => setDrawerOpen(false)} style={{
                 display: "flex", alignItems: "center", gap: "12px",

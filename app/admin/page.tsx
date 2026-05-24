@@ -4,6 +4,12 @@ import Link from "next/link"
 export default async function AdminDashboard() {
   const supabase = await createClient()
 
+  // Lấy role user hiện tại
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from("profiles").select("role").eq("id", user!.id).single()
+  const isEditor = profile?.role === "editor"
+
   const [
     { count: totalLeads },
     { count: newLeads },
@@ -20,26 +26,25 @@ export default async function AdminDashboard() {
     supabase.from("articles").select("id, title, slug, status, read_time, published_at, categories(name, slug)").order("created_at", { ascending: false }).limit(5),
   ])
 
-  const stats = [
-    { label: "Tổng lead", value: totalLeads || 0, sub: "Tất cả thời gian", color: "#00C389" },
-    { label: "Lead mới", value: newLeads || 0, sub: "Chưa xử lý", color: "#EF9F27" },
-    { label: "Bài đã đăng", value: totalArticles || 0, sub: "Tất cả bài viết", color: "#378ADD" },
-    { label: "Người dùng", value: totalUsers || 0, sub: "Đã đăng ký", color: "#8B5CF6" },
+  // Editor chỉ thấy stat Bài đã đăng
+  const allStats = [
+    { label: "Tổng lead",   value: totalLeads    || 0, sub: "Tất cả thời gian", color: "#00C389", editorHidden: true  },
+    { label: "Lead mới",    value: newLeads      || 0, sub: "Chưa xử lý",       color: "#EF9F27", editorHidden: true  },
+    { label: "Bài đã đăng", value: totalArticles || 0, sub: "Tất cả bài viết",  color: "#378ADD", editorHidden: false },
+    { label: "Người dùng",  value: totalUsers    || 0, sub: "Đã đăng ký",       color: "#8B5CF6", editorHidden: true  },
   ]
+  const stats = isEditor ? allStats.filter(s => !s.editorHidden) : allStats
 
   const STATUS_LABELS: Record<string, { label: string; bg: string; color: string }> = {
-    new: { label: "Mới", bg: "#EFF6FF", color: "#1D4ED8" },
+    new:        { label: "Mới",        bg: "#EFF6FF", color: "#1D4ED8" },
     processing: { label: "Đang xử lý", bg: "#FFFBEB", color: "#B45309" },
-    converted: { label: "Đã chốt", bg: "#F0FDF4", color: "#15803D" },
-    closed: { label: "Đóng", bg: "#F9FAFB", color: "#6B7280" },
+    converted:  { label: "Đã chốt",    bg: "#F0FDF4", color: "#15803D" },
+    closed:     { label: "Đóng",       bg: "#F9FAFB", color: "#6B7280" },
   }
 
   const SOURCE_LABELS: Record<string, string> = {
-    homepage: "Trang chủ",
-    contact: "Liên hệ",
-    article: "Bài viết",
-    ebook: "Ebook",
-    course: "Khóa học",
+    homepage: "Trang chủ", contact: "Liên hệ", article: "Bài viết",
+    ebook: "Ebook", course: "Khóa học",
   }
 
   return (
@@ -53,7 +58,15 @@ export default async function AdminDashboard() {
         position: "sticky", top: 0, zIndex: 40,
       }}>
         <div>
-          <h1 style={{ fontSize: "16px", fontWeight: 600, color: "#0A1628" }}>Dashboard</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <h1 style={{ fontSize: "16px", fontWeight: 600, color: "#0A1628", margin: 0 }}>Dashboard</h1>
+            {isEditor && (
+              <span style={{
+                fontSize: "10px", fontWeight: 600, color: "#EF9F27",
+                background: "rgba(239,159,39,0.12)", padding: "2px 8px", borderRadius: "20px",
+              }}>Editor</span>
+            )}
+          </div>
           <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
             {new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
           </p>
@@ -71,9 +84,10 @@ export default async function AdminDashboard() {
 
       <div className="admin-content" style={{ padding: "24px 28px" }}>
 
-        {/* STATS — 4 cột desktop, 2 cột mobile */}
+        {/* STATS */}
         <div className="admin-stats-grid" style={{
-          display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+          display: "grid",
+          gridTemplateColumns: isEditor ? "1fr" : "repeat(4, 1fr)",
           gap: "14px", marginBottom: "24px",
         }}>
           {stats.map((s) => (
@@ -91,60 +105,65 @@ export default async function AdminDashboard() {
           ))}
         </div>
 
-        {/* 2 COLUMNS — stack dọc trên mobile */}
-        <div className="admin-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* 2 COLUMNS — editor chỉ thấy cột bài viết */}
+        <div className="admin-two-col" style={{
+          display: "grid",
+          gridTemplateColumns: isEditor ? "1fr" : "1fr 1fr",
+          gap: "16px",
+        }}>
 
-          {/* LEADS */}
-          <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
-            <div style={{
-              padding: "14px 20px", borderBottom: "0.5px solid #e2e8f0",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                <i className="ti ti-users" style={{ fontSize: "15px", color: "#64748b" }} />
-                <span style={{ fontSize: "14px", fontWeight: 500, color: "#0A1628" }}>Lead mới nhất</span>
+          {/* LEADS — ẩn với editor */}
+          {!isEditor && (
+            <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
+              <div style={{
+                padding: "14px 20px", borderBottom: "0.5px solid #e2e8f0",
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                  <i className="ti ti-users" style={{ fontSize: "15px", color: "#64748b" }} />
+                  <span style={{ fontSize: "14px", fontWeight: 500, color: "#0A1628" }}>Lead mới nhất</span>
+                </div>
+                <Link href="/admin/leads" style={{ fontSize: "12px", color: "#00C389", textDecoration: "none" }}>
+                  Xem tất cả →
+                </Link>
               </div>
-              <Link href="/admin/leads" style={{ fontSize: "12px", color: "#00C389", textDecoration: "none" }}>
-                Xem tất cả →
-              </Link>
-            </div>
-
-            {!recentLeads || recentLeads.length === 0 ? (
-              <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
-                Chưa có lead nào
-              </div>
-            ) : (
-              recentLeads.map((lead: any) => {
-                const st = STATUS_LABELS[lead.status] || STATUS_LABELS.new
-                return (
-                  <div key={lead.id} style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    padding: "12px 20px", borderBottom: "0.5px solid #f1f5f9",
-                  }}>
-                    <div style={{
-                      width: "32px", height: "32px", borderRadius: "50%",
-                      background: "#EFF6FF", display: "flex", alignItems: "center",
-                      justifyContent: "center", fontSize: "12px", fontWeight: 600,
-                      color: "#1D4ED8", flexShrink: 0,
+              {!recentLeads || recentLeads.length === 0 ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
+                  Chưa có lead nào
+                </div>
+              ) : (
+                recentLeads.map((lead: any) => {
+                  const st = STATUS_LABELS[lead.status] || STATUS_LABELS.new
+                  return (
+                    <div key={lead.id} style={{
+                      display: "flex", alignItems: "center", gap: "12px",
+                      padding: "12px 20px", borderBottom: "0.5px solid #f1f5f9",
                     }}>
-                      {lead.full_name?.[0]?.toUpperCase() || "?"}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 500, color: "#0A1628" }}>{lead.full_name}</div>
-                      <div style={{ fontSize: "11px", color: "#94a3b8" }}>
-                        {lead.phone} · {SOURCE_LABELS[lead.source] || lead.source}
+                      <div style={{
+                        width: "32px", height: "32px", borderRadius: "50%",
+                        background: "#EFF6FF", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: "12px", fontWeight: 600,
+                        color: "#1D4ED8", flexShrink: 0,
+                      }}>
+                        {lead.full_name?.[0]?.toUpperCase() || "?"}
                       </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 500, color: "#0A1628" }}>{lead.full_name}</div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                          {lead.phone} · {SOURCE_LABELS[lead.source] || lead.source}
+                        </div>
+                      </div>
+                      <span style={{
+                        fontSize: "10px", fontWeight: 500, padding: "3px 8px",
+                        borderRadius: "20px", background: st.bg, color: st.color,
+                        whiteSpace: "nowrap",
+                      }}>{st.label}</span>
                     </div>
-                    <span style={{
-                      fontSize: "10px", fontWeight: 500, padding: "3px 8px",
-                      borderRadius: "20px", background: st.bg, color: st.color,
-                      whiteSpace: "nowrap",
-                    }}>{st.label}</span>
-                  </div>
-                )
-              })
-            )}
-          </div>
+                  )
+                })
+              )}
+            </div>
+          )}
 
           {/* ARTICLES */}
           <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
@@ -160,7 +179,6 @@ export default async function AdminDashboard() {
                 Quản lý →
               </Link>
             </div>
-
             {!recentArticles || recentArticles.length === 0 ? (
               <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
                 Chưa có bài viết nào

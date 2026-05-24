@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
@@ -16,6 +16,20 @@ export default function ArticleActions({
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  // Mặc định ẩn nút xóa cho đến khi xác nhận được role là admin
+  const [canDelete, setCanDelete] = useState(false)
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from("profiles").select("role").eq("id", user.id).single()
+      // Chỉ hiện nút xóa khi đã xác nhận là admin
+      setCanDelete(data?.role === "admin")
+    }
+    checkRole()
+  }, [])
 
   const handleDelete = async () => {
     setLoading(true)
@@ -28,7 +42,6 @@ export default function ArticleActions({
   if (showConfirm) {
     return (
       <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-
         <button
           onClick={handleDelete}
           disabled={loading}
@@ -74,18 +87,20 @@ export default function ArticleActions({
         <i className="ti ti-external-link" style={{ fontSize: "12px" }} aria-hidden="true"></i>
       </Link>
 
-      {/* Xóa */}
-      <button
-        onClick={() => setShowConfirm(true)}
-        style={{
-          display: "flex", alignItems: "center",
-          padding: "5px 8px", borderRadius: "6px",
-          background: "#FEF2F2", border: "0.5px solid #FECACA",
-          color: "#DC2626", cursor: "pointer",
-        }}
-      >
-        <i className="ti ti-trash" style={{ fontSize: "12px" }} aria-hidden="true"></i>
-      </button>
+      {/* Xóa — chỉ hiện sau khi xác nhận role là admin */}
+      {canDelete && (
+        <button
+          onClick={() => setShowConfirm(true)}
+          style={{
+            display: "flex", alignItems: "center",
+            padding: "5px 8px", borderRadius: "6px",
+            background: "#FEF2F2", border: "0.5px solid #FECACA",
+            color: "#DC2626", cursor: "pointer",
+          }}
+        >
+          <i className="ti ti-trash" style={{ fontSize: "12px" }} aria-hidden="true"></i>
+        </button>
+      )}
     </div>
   )
 }

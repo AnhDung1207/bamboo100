@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -309,6 +310,8 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
 }
 
 export default function ArticleFeed({ articles }: { articles: any[] }) {
+  const [visibleDays, setVisibleDays] = useState(3) // ← thêm state
+
   if (!articles || articles.length === 0) {
     return (
       <div style={{
@@ -327,10 +330,13 @@ export default function ArticleFeed({ articles }: { articles: any[] }) {
   }
 
   const grouped = groupByDate(articles)
+  const allEntries = Object.entries(grouped)
+  const visibleEntries = allEntries.slice(0, visibleDays) // ← chỉ lấy số ngày cần hiện
+  const hasMore = allEntries.length > visibleDays // ← còn ngày chưa hiện không
 
   return (
     <div>
-      {Object.entries(grouped).map(([dateLabel, dayArticles]) => {
+      {visibleEntries.map(([dateLabel, dayArticles]) => {
         const featured = dayArticles[0]
         const rest = dayArticles.slice(1)
         const firstRow = rest.slice(0, 3)
@@ -338,46 +344,23 @@ export default function ArticleFeed({ articles }: { articles: any[] }) {
 
         return (
           <div key={dateLabel} style={{ marginBottom: "40px" }}>
-            {/* Date label */}
-            <h2 style={{
-              fontSize: "20px", fontWeight: 400, color: "#0A1628",
-              marginBottom: "16px",
-            }}>{dateLabel}</h2>
-
-            {/* Featured article */}
+            <h2 style={{ fontSize: "20px", fontWeight: 400, color: "#0A1628", marginBottom: "16px" }}>{dateLabel}</h2>
             <div style={{ marginBottom: "16px" }}>
               <FeaturedCard article={featured} />
             </div>
-
-            {/* 3-column small articles */}
             {firstRow.length > 0 && (
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${firstRow.length}, 1fr)`,
-                gap: "20px",
-                marginBottom: "8px",
-              }}>
-                {firstRow.map((article) => (
-                  <SmallCard key={article.id} article={article} />
-                ))}
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${firstRow.length}, 1fr)`, gap: "20px", marginBottom: "8px" }}>
+                {firstRow.map((article) => <SmallCard key={article.id} article={article} />)}
               </div>
             )}
-
-            {/* Second featured if enough articles */}
             {remaining.length > 0 && (
               <>
                 <div style={{ marginBottom: "16px", marginTop: "16px" }}>
                   <FeaturedCard article={remaining[0]} />
                 </div>
                 {remaining.slice(1).length > 0 && (
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${Math.min(remaining.slice(1).length, 3)}, 1fr)`,
-                    gap: "20px",
-                  }}>
-                    {remaining.slice(1, 4).map((article) => (
-                      <SmallCard key={article.id} article={article} />
-                    ))}
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(remaining.slice(1).length, 3)}, 1fr)`, gap: "20px" }}>
+                    {remaining.slice(1, 4).map((article) => <SmallCard key={article.id} article={article} />)}
                   </div>
                 )}
               </>
@@ -388,14 +371,15 @@ export default function ArticleFeed({ articles }: { articles: any[] }) {
 
       {/* Load more */}
       <div style={{ textAlign: "center", paddingTop: "16px" }}>
-        <button style={{
-          background: "#fff", color: "#0A1628",
-          border: "1px solid #e2e8f0", borderRadius: "8px",
-          padding: "10px 28px", fontSize: "13px", fontWeight: 500,
-          cursor: "pointer",
-        }}>
-          Các tin tức khác →
-        </button>
+        {hasMore ? (
+          <button
+            onClick={() => setVisibleDays((prev) => prev + 3)} // ← hiện thêm 3 ngày
+            style={{ background: "#fff", color: "#0A1628", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 28px", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>
+            Các tin tức khác →
+          </button>
+        ) : (
+          <p style={{ fontSize: "12px", color: "#94a3b8" }}>Đã hiển thị tất cả bài viết</p>
+        )}
       </div>
     </div>
   )

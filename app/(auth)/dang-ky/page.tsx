@@ -70,12 +70,12 @@ export default function DangKyPage() {
           width: "100%",
           textAlign: "center",
         }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📧</div>
+          <i className="ti ti-mail-check" style={{ fontSize: "56px", color: "#00C389", marginBottom: "16px", display: "block" }} />
           <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#0A1628", marginBottom: "10px" }}>
             Kiểm tra email của bạn!
           </h2>
           <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, marginBottom: "24px" }}>
-            Tớ đã gửi link xác nhận đến <strong>{form.email}</strong>. Vui lòng kiểm tra hộp thư và click vào link để kích hoạt tài khoản.
+            Chúng tôi đã gửi email xác nhận đến <strong>{form.email}</strong>. Kiểm tra hộp thư (gồm cả thư mục Spam) và nhấp vào link để hoàn tất đăng ký.
           </p>
           <Link href="/dang-nhap" style={{
             display: "inline-block",

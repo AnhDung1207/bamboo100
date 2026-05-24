@@ -15,7 +15,7 @@ const WHY = [
 const SERVICES = [
   { num: "01", title: "Phân tích thị trường", desc: "Báo cáo định kỳ theo ngành hàng: Năng lượng, Kim loại, Nông sản.", cta: "Xem báo cáo mẫu", href: "/phan-tich" },
   { num: "02", title: "Tư vấn chiến lược 1-1", desc: "Cùng chuyên gia xây dựng danh mục và kế hoạch giao dịch cá nhân hóa.", cta: "Đặt lịch tư vấn", href: "/lien-he#dat-lich" },
-  { num: "03", title: "Đào tạo & học viện", desc: "Khóa học từ cơ bản đến nâng cao về phái sinh hàng hóa.", cta: "Khám phá khóa học", href: "/hoc-vien" },
+  { num: "03", title: "Đào tạo & học viện", desc: "Khóa học từ cơ bản đến nâng cao về phái sinh hàng hóa.", cta: "Khám phá khóa học", href: "/hoc-vien/khoa-hoc" },
 ]
 
 type Article = {

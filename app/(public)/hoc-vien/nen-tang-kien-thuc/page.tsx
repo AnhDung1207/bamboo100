@@ -73,7 +73,7 @@ export default async function NenTangKienThucPage({
 
       <style>{`
         @media (max-width: 768px) {
-          .kt-hero { padding: 40px 16px 28px !important; }
+          .kt-hero { padding: 80px 16px 28px !important; }
           .kt-hero h1 { font-size: 26px !important; }
           .kt-tags { padding: 0 16px 24px !important; }
           .kt-feed { padding: 0 16px 48px !important; }
@@ -96,7 +96,7 @@ export default async function NenTangKienThucPage({
       <Navbar />
 
       {/* HERO */}
-      <div className="kt-hero" style={{ textAlign: "center", padding: "80px 40px 36px" }}>
+      <div className="kt-hero" style={{ textAlign: "center", padding: "100px 40px 36px" }}>
         <h1 style={{ fontSize: "36px", fontWeight: 700, color: "#0A1628", marginBottom: "24px", letterSpacing: "-0.02em" }}>
           Kiến thức nền tảng
         </h1>

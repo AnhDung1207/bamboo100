@@ -35,7 +35,7 @@ export default function LienHeClient() {
 
       <style>{`
         @media (max-width: 768px) {
-          .hero-section { padding: 40px 20px !important; }
+          .hero-section { padding: 90px 20px !important; }
           .hero-section h1 { font-size: 26px !important; }
           .main-grid {
             grid-template-columns: 1fr !important;
@@ -54,7 +54,7 @@ export default function LienHeClient() {
       {/* HERO */}
       <div className="hero-section" style={{
         background: "linear-gradient(135deg, #0A1628 0%, #0D2040 100%)",
-        padding: "64px 40px 56px",
+        padding: "100px 40px 56px",
         textAlign: "center",
       }}>
         <div style={{

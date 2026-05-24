@@ -71,7 +71,7 @@ export default function VeChungToiPage() {
 
         /* ── Hero ── */
         .hero-section {
-          padding: 80px 40px 72px;
+          padding: 100px 40px 72px;
           text-align: center;
         }
         .hero-title { font-size: 40px; }
@@ -83,7 +83,7 @@ export default function VeChungToiPage() {
           .hamburger  { display: flex !important; }
 
           /* Hero */
-          .hero-section { padding: 48px 20px 40px !important; }
+          .hero-section { padding: 90px 20px 40px !important; }
           .hero-title   { font-size: 26px !important; }
 
           /* Stats */

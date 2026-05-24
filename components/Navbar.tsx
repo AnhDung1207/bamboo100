@@ -250,11 +250,12 @@ export default function Navbar() {
         @media (max-width: 767px) {
           .nb-desktop   { display: none !important; }
           .nb-hamburger { display: flex !important; }
+        .nb-nav { padding: 0 16px !important; }
         }
       `}</style>
 
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }}>
-        <nav style={{
+        <nav className="nb-nav" style={{
           background: navBg,
           boxShadow,
           transition: "background 0.25s ease, box-shadow 0.25s ease",
@@ -296,11 +297,12 @@ export default function Navbar() {
 
             {/* Học viện mega menu */}
             <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "relative" }}>
-              <Link href="/hoc-vien" style={{
-                color: linkColor, fontSize: "13px", fontWeight: 600,
-                padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
-                display: "flex", alignItems: "center", transition: "color 0.35s",
-              }}>Học viện</Link>
+              <span style={{
+  color: linkColor, fontSize: "13px", fontWeight: 600,
+  padding: "6px 12px", borderRadius: "6px",
+  display: "flex", alignItems: "center", transition: "color 0.35s",
+  cursor: "default",
+}}>Học viện</span>
 
               {megaOpen && (
                 <div className="mega-menu" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>

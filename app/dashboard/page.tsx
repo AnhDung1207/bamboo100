@@ -460,7 +460,7 @@ export default function DashboardPage() {
               <h3 style={{ margin: "0 0 12px", fontSize: "11px", fontWeight: 600, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Khám phá</h3>
               {[
                 { icon: <BarChart2 size={15} />, label: "Phân tích thị trường", href: "/phan-tich" },
-                { icon: <GraduationCap size={15} />, label: "Học viện", href: "/hoc-vien" },
+                { icon: <GraduationCap size={15} />, label: "Học viện", href: "/hoc-vien/nen-tang-kien-thuc" },
                 { icon: <FileText size={15} />, label: "Ebook miễn phí", href: "/hoc-vien/ebook-dau-tu" },
               ].map(item => (
                 <Link key={item.href} href={item.href} style={{ display: "flex", alignItems: "center", gap: "9px", padding: "10px 0", fontSize: "13px", color: "#64748B", textDecoration: "none", borderBottom: "1px solid #F1F5F9", transition: "color 0.15s" }}

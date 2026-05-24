@@ -79,7 +79,7 @@ export default async function DichVuPage() {
 
           /* Hero */
           .hero-section {
-            padding: 48px 20px 40px !important;
+            padding: 80px 20px 40px !important;
           }
           .hero-h1 { font-size: 28px !important; }
           .hero-btns {
@@ -125,7 +125,7 @@ export default async function DichVuPage() {
       {/* HERO */}
       <div className="hero-section" style={{
         background: "linear-gradient(135deg, #0A1628 0%, #0D2040 100%)",
-        padding: "72px 40px 64px", textAlign: "center",
+        padding: "90px 40px 64px", textAlign: "center",
       }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "8px",

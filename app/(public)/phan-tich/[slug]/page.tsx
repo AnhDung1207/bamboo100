@@ -161,9 +161,9 @@ export default async function ArticleDetailPage({
           .nav-links { display: none !important; }
           .nav-login { display: none !important; }
           .hamburger { display: flex !important; }
-          .article-hero { height: 260px !important; }
-          .article-hero-text { padding: 0 16px 16px !important; }
-          .article-hero-title { font-size: 20px !important; }
+          .article-hero { height: 320px !important; }
+          .article-hero-text { padding: 0 16px 5px !important; }
+          .article-hero-title { font-size: 17px !important; line-height: 1.3 !important; }
           .breadcrumb { padding: 10px 16px !important; }
           .breadcrumb-title { display: none !important; }
           .article-grid { grid-template-columns: 1fr !important; padding: 20px 0 !important; gap: 0 !important; }
@@ -305,7 +305,7 @@ export default async function ArticleDetailPage({
               {formatDateTime(a.published_at)}
             </div>
           )}
-          <h1 className="article-hero-title" style={{ color: "#fff", fontSize: "clamp(20px, 3vw, 32px)", fontWeight: 700, lineHeight: 1.35, maxWidth: "760px", margin: "0 auto", textShadow: "0 0 1px #000, 0 1px 3px #000, 0 2px 8px rgba(0,0,0,1), 0 4px 20px rgba(0,0,0,1)" }}>
+          <h1 className="article-hero-title" style={{ color: "#fff", fontSize: "clamp(18px, 5vw, 32px)", fontWeight: 700, lineHeight: 1.35, maxWidth: "760px", margin: "0 auto", textShadow: "0 0 1px #000, 0 1px 3px #000, 0 2px 8px rgba(0,0,0,1), 0 4px 20px rgba(0,0,0,1)" }}>
             {a.title}
           </h1>
         </div>

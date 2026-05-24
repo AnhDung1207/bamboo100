@@ -177,7 +177,6 @@ export default function SettingsForm({ settings, userId, profile }: Props) {
               display: "flex", alignItems: "center", gap: "6px",
               padding: "14px 16px", fontSize: "13px", fontWeight: activeTab === tab.key ? 600 : 400,
               color: activeTab === tab.key ? "#0A1628" : "#64748b",
-              borderBottom: activeTab === tab.key ? "2px solid #00C389" : "2px solid transparent",
               background: "transparent", border: "none", borderBottom: activeTab === tab.key ? "2px solid #00C389" : "2px solid transparent",
               cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit",
             }}>

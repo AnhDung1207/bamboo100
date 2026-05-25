@@ -18,6 +18,7 @@ const NAV = [
     section: "Nội dung",
     items: [
       { label: "Bài phân tích", href: "/admin/bai-viet", icon: "ti-file-text",       adminOnly: false },
+      { label: "Kiến thức",     href: "/admin/kien-thuc", icon: "ti-book-2",    adminOnly: false },
       { label: "Khóa học",      href: "/admin/khoa-hoc", icon: "ti-school",           adminOnly: false },
       { label: "Ebook",         href: "/admin/ebook",    icon: "ti-book",             adminOnly: false },
       { label: "Sự kiện",       href: "/admin/su-kien",  icon: "ti-calendar-event",   adminOnly: false },

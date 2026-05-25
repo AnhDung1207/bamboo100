@@ -12,9 +12,11 @@ export default function TaoMoiBaiViet() {
   const editorRef = useRef<HTMLDivElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
+  const [publishType, setPublishType] = useState<"analytics" | "knowledge">("analytics")
   const [categories, setCategories] = useState<any[]>([])
   const [productGroups, setProductGroups] = useState<any[]>([])
   const [filteredCategories, setFilteredCategories] = useState<any[]>([])
+  const [knowledgeCategories, setKnowledgeCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -32,6 +34,7 @@ export default function TaoMoiBaiViet() {
   useEffect(() => {
     supabase.from("categories").select("*").order("order_index").then(({ data }) => { if (data) setCategories(data) })
     supabase.from("product_groups").select("*").order("order_index").then(({ data }) => { if (data) setProductGroups(data) })
+    supabase.from("knowledge_categories").select("*").order("order_index").then(({ data }) => { if (data) setKnowledgeCategories(data) })
   }, [])
 
   useEffect(() => {
@@ -39,6 +42,11 @@ export default function TaoMoiBaiViet() {
     else setFilteredCategories([])
     setForm((prev) => ({ ...prev, category_id: "" }))
   }, [form.group_id, categories])
+
+  // Reset category khi đổi loại bài
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, category_id: "", group_id: "" }))
+  }, [publishType])
 
   const generateSlug = (title: string) =>
     title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -94,21 +102,38 @@ export default function TaoMoiBaiViet() {
     setLoading(true); setSaveStatus("")
     const { data: { user } } = await supabase.auth.getUser()
     const currentContent = editorRef.current?.innerHTML || form.content
-    const payload = {
-      title: form.title, slug: form.slug || generateSlug(form.title),
-      excerpt: form.excerpt || null, content: currentContent || null,
-      category_id: form.category_id || null, group_id: form.group_id || null,
-      read_time: form.read_time ? parseInt(form.read_time) : null,
-      is_premium: form.is_premium, is_hot: form.is_hot,
-      thumbnail_url: form.thumbnail_url || null,
-      key_takeaways: form.key_takeaways || null, status,
-      author_id: user?.id || null,
-      published_at: status === "published"
-        ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
-        : null,
+
+    if (publishType === "analytics") {
+      const payload = {
+        title: form.title, slug: form.slug || generateSlug(form.title),
+        excerpt: form.excerpt || null, content: currentContent || null,
+        category_id: form.category_id || null, group_id: form.group_id || null,
+        read_time: form.read_time ? parseInt(form.read_time) : null,
+        is_premium: form.is_premium, is_hot: form.is_hot,
+        thumbnail_url: form.thumbnail_url || null,
+        key_takeaways: form.key_takeaways || null, status,
+        author_id: user?.id || null,
+        published_at: status === "published"
+          ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
+          : null,
+      }
+      const { error } = await supabase.from("articles").insert(payload).select().single()
+      if (error) { setSaveStatus("error"); setLoading(false); return }
+    } else {
+      const payload = {
+        title: form.title, slug: form.slug || generateSlug(form.title),
+        excerpt: form.excerpt || null, content: currentContent || null,
+        category_id: form.category_id || null,
+        read_time: form.read_time ? parseInt(form.read_time) : null,
+        thumbnail_url: form.thumbnail_url || null, status,
+        published_at: status === "published"
+          ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
+          : null,
+      }
+      const { error } = await supabase.from("knowledge_articles").insert(payload).select().single()
+      if (error) { setSaveStatus("error"); setLoading(false); return }
     }
-    const { error } = await supabase.from("articles").insert(payload).select().single()
-    if (error) { setSaveStatus("error"); setLoading(false); return }
+
     setSaveStatus("success"); setLoading(false)
     setTimeout(() => router.push("/admin/bai-viet"), 800)
   }
@@ -119,6 +144,28 @@ export default function TaoMoiBaiViet() {
 
   const SidebarContent = () => (
     <>
+      {/* Loại bài */}
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Xuất bản lên</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+          {[
+            { value: "analytics", label: "📊 Phân tích", desc: "Trang phân tích thị trường" },
+            { value: "knowledge", label: "📚 Kiến thức", desc: "Nền tảng kiến thức" },
+          ].map((opt) => (
+            <div key={opt.value} onClick={() => setPublishType(opt.value as any)}
+              style={{
+                padding: "10px", borderRadius: "8px", cursor: "pointer", textAlign: "center",
+                border: publishType === opt.value ? "1.5px solid #00C389" : "1.5px solid #e2e8f0",
+                background: publishType === opt.value ? "#f0fdf8" : "#fff",
+                transition: "all 0.15s",
+              }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: publishType === opt.value ? "#00C389" : "#0A1628", marginBottom: "2px" }}>{opt.label}</div>
+              <div style={{ fontSize: "10px", color: "#94a3b8", lineHeight: 1.3 }}>{opt.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Thumbnail */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Ảnh thumbnail</h3>
@@ -151,7 +198,7 @@ export default function TaoMoiBaiViet() {
             <input type="datetime-local" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} style={inputStyle} />
             <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Để trống = đăng ngay lập tức</p>
           </div>
-          {[
+          {publishType === "analytics" && [
             { key: "is_premium", label: "Bài Premium", desc: "Yêu cầu đăng nhập để đọc", color: "#00C389" },
             { key: "is_hot", label: "🔥 Bài Hot", desc: "Hiển thị badge Hot trên feed", color: "#E24B4A" },
           ].map((toggle) => (
@@ -172,22 +219,34 @@ export default function TaoMoiBaiViet() {
       {/* Category */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Phân loại</h3>
-        <div style={{ marginBottom: "10px" }}>
-          <label style={labelStyle}>Nhóm ngành</label>
-          <select value={form.group_id} onChange={(e) => setForm({ ...form, group_id: e.target.value })} style={inputStyle}>
-            <option value="">-- Chọn nhóm ngành --</option>
-            {productGroups.map((g) => <option key={g.id} value={g.id}>{g.icon} {g.name}</option>)}
-          </select>
-        </div>
-        {form.group_id && (
-          <div>
-            <label style={labelStyle}>Sản phẩm cụ thể</label>
-            {filteredCategories.length > 0 ? (
-              <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
-                <option value="">-- Chọn sản phẩm --</option>
-                {filteredCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        {publishType === "analytics" ? (
+          <>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={labelStyle}>Nhóm ngành</label>
+              <select value={form.group_id} onChange={(e) => setForm({ ...form, group_id: e.target.value })} style={inputStyle}>
+                <option value="">-- Chọn nhóm ngành --</option>
+                {productGroups.map((g) => <option key={g.id} value={g.id}>{g.icon} {g.name}</option>)}
               </select>
-            ) : <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>Nhóm này không có sản phẩm con</p>}
+            </div>
+            {form.group_id && (
+              <div>
+                <label style={labelStyle}>Sản phẩm cụ thể</label>
+                {filteredCategories.length > 0 ? (
+                  <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
+                    <option value="">-- Chọn sản phẩm --</option>
+                    {filteredCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                ) : <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>Nhóm này không có sản phẩm con</p>}
+              </div>
+            )}
+          </>
+        ) : (
+          <div>
+            <label style={labelStyle}>Chủ đề</label>
+            <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
+              <option value="">-- Chọn chủ đề --</option>
+              {knowledgeCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+            </select>
           </div>
         )}
       </div>
@@ -217,12 +276,7 @@ export default function TaoMoiBaiViet() {
           .editor-sidebar-mobile-btn { display: flex !important; }
         }
         .editor-sidebar-mobile-btn { display: none; }
-
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to   { transform: translateY(0); }
-        }
-
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         [contenteditable]:empty:before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; }
         [contenteditable] h2 { font-size: 20px; font-weight: 600; margin: 16px 0 8px; color: #0A1628; display: block; }
         [contenteditable] h3 { font-size: 17px; font-weight: 600; margin: 14px 0 6px; color: #0A1628; display: block; }
@@ -252,13 +306,10 @@ export default function TaoMoiBaiViet() {
           {saveStatus === "success" && <span style={{ fontSize: "12px", color: "#15803D" }}>✓ Đã lưu!</span>}
           {saveStatus === "error" && <span style={{ fontSize: "12px", color: "#DC2626" }}>Lỗi!</span>}
           {saveStatus === "error-title" && <span style={{ fontSize: "12px", color: "#DC2626" }}>Cần tiêu đề!</span>}
-
-          {/* Nút cài đặt — chỉ mobile */}
           <button className="editor-sidebar-mobile-btn" onClick={() => setSidebarOpen(true)}
             style={{ padding: "7px 12px", borderRadius: "7px", background: "#f8fafc", border: "0.5px solid #e2e8f0", color: "#64748b", fontSize: "13px", cursor: "pointer", alignItems: "center", gap: "5px", fontFamily: "inherit" }}>
             <i className="ti ti-settings" style={{ fontSize: "14px" }} />
           </button>
-
           <button onClick={() => handleSave("draft")} disabled={loading} style={{ padding: "7px 16px", borderRadius: "7px", background: "#fff", border: "0.5px solid #e2e8f0", color: "#64748b", fontSize: "13px", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
             {loading ? "..." : "Nháp"}
           </button>
@@ -272,8 +323,6 @@ export default function TaoMoiBaiViet() {
       {/* MAIN LAYOUT */}
       <div className="editor-content" style={{ maxWidth: "1100px", margin: "0 auto", padding: "28px" }}>
         <div className="editor-layout" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: "20px" }}>
-
-          {/* LEFT — Editor */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "20px 24px" }}>
               <input className="editor-title-input" placeholder="Tiêu đề bài viết..." value={form.title}
@@ -292,13 +341,15 @@ export default function TaoMoiBaiViet() {
                 style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.6, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
             </div>
 
-            <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "16px 24px" }}>
-              <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>Key Takeaways</label>
-              <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 8px" }}>Mỗi dòng là 1 bullet.</p>
-              <textarea value={form.key_takeaways} onChange={(e) => { const el = e.target; el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; setForm({ ...form, key_takeaways: e.target.value }) }} rows={3}
-                placeholder={"Giá vàng tăng mạnh...\nDầu thô WTI vượt mốc..."}
-                style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.7, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box", overflow: "hidden" }} />
-            </div>
+            {publishType === "analytics" && (
+              <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "16px 24px" }}>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>Key Takeaways</label>
+                <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 8px" }}>Mỗi dòng là 1 bullet.</p>
+                <textarea value={form.key_takeaways} onChange={(e) => { const el = e.target; el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; setForm({ ...form, key_takeaways: e.target.value }) }} rows={3}
+                  placeholder={"Giá vàng tăng mạnh...\nDầu thô WTI vượt mốc..."}
+                  style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.7, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box", overflow: "hidden" }} />
+              </div>
+            )}
 
             {/* Editor */}
             <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
@@ -347,7 +398,7 @@ export default function TaoMoiBaiViet() {
                   }
                 }}
                 style={{ minHeight: "400px", padding: "24px", fontSize: "15px", lineHeight: 1.8, color: "#0A1628", outline: "none", fontFamily: "inherit" }}
-                data-placeholder="Bắt đầu viết nội dung bài phân tích..." />
+                data-placeholder="Bắt đầu viết nội dung bài viết..." />
             </div>
           </div>
 
@@ -358,7 +409,7 @@ export default function TaoMoiBaiViet() {
         </div>
       </div>
 
-      {/* SIDEBAR MOBILE — bottom sheet */}
+      {/* SIDEBAR MOBILE */}
       {sidebarOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           <div onClick={() => setSidebarOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} />

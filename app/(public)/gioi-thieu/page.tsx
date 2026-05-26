@@ -288,7 +288,7 @@ export default function VeChungToiPage() {
         </div>
         <div className="team-grid">
           {[
-            { name: "Nguyễn Minh Tuấn", role: "CEO & Founder",
+            { name: "Nguyễn Anh Dũng", role: "CEO & Founder",
               desc: "10+ năm kinh nghiệm giao dịch phái sinh hàng hóa tại các sàn quốc tế CME, ICE.", icon: "ti-user-circle" },
             { name: "Trần Thị Lan Anh", role: "Head of Research",
               desc: "Chuyên gia phân tích vĩ mô và cung-cầu hàng hóa, từng làm việc tại các quỹ đầu tư Singapore.", icon: "ti-user-circle" },

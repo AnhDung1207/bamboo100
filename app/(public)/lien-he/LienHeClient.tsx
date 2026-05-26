@@ -98,10 +98,10 @@ export default function LienHeClient() {
           {[
             {
               icon: "ti-map-pin", label: "Địa chỉ",
-              value: "Tầng 8, Tòa nhà ABC, 123 Đinh Tiên Hoàng, Quận 1, TP.HCM",
+              value: "Tầng 7, số 5B ngõ 55 Huỳnh Thúc Kháng, Đống Đa, Hà Nội",
             },
-            { icon: "ti-phone", label: "Hotline", value: "0901 234 567" },
-            { icon: "ti-mail", label: "Email", value: "contact@bamboo100.vn" },
+            { icon: "ti-phone", label: "Hotline", value: "0378 219 712" },
+            { icon: "ti-mail", label: "Email", value: "daucohanghoa@gmail.com" },
             {
               icon: "ti-clock", label: "Giờ làm việc",
               value: "Thứ 2 – Thứ 6: 8:00 – 18:00 | Thứ 7: 8:00 – 12:00",

@@ -260,7 +260,7 @@ export default function Navbar() {
           boxShadow,
           transition: "background 0.25s ease, box-shadow 0.25s ease",
           display: "flex", alignItems: "center",
-          justifyContent: "space-between", padding: "0 40px", height: "60px",
+          justifyContent: "flex-start", gap: "8px", padding: "0 40px", height: "60px",
           borderBottom: `1px solid ${borderColor}`,
           position: "relative", zIndex: 100,
         }}>
@@ -335,7 +335,7 @@ export default function Navbar() {
           </div>
 
           {/* ── RIGHT SIDE ── */}
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexShrink: 0, marginLeft: "auto" }}>
             {user ? (
               <div ref={userMenuRef} style={{ position: "relative" }} className="nb-desktop">
                 <button

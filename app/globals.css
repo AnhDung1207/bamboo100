@@ -220,3 +220,6 @@ html, body {
     padding-right: 0 !important;
   }
 }
+* {
+  font-family: 'Roboto', sans-serif !important;
+}

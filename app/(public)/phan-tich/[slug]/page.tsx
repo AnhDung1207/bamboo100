@@ -155,24 +155,84 @@ export default async function ArticleDetailPage({
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* LIGHTBOX STYLES */}
       <style>{`
+        /* ─── MOBILE BREAKPOINT ─── */
         @media (max-width: 768px) {
+          /* Navbar */
           .nav-links { display: none !important; }
           .nav-login { display: none !important; }
           .hamburger { display: flex !important; }
-          .article-hero { height: 320px !important; }
+
+          /* Hero */
+          .article-hero { height: 280px !important; }
           .article-hero-text { padding: 0 16px 5px !important; }
-          .article-hero-title { font-size: 17px !important; line-height: 1.3 !important; }
-          .breadcrumb { padding: 10px 16px !important; }
+          .article-hero-title { font-size: 17px !important; line-height: 1.35 !important; }
+
+          /* Breadcrumb */
+          .breadcrumb { padding: 8px 16px !important; font-size: 11px !important; gap: 4px !important; }
           .breadcrumb-title { display: none !important; }
-          .article-grid { grid-template-columns: 1fr !important; padding: 20px 0 !important; gap: 0 !important; }
-          .sidebar-left { display: none !important; }
+
+          /* Wrapper & Grid — fix quan trọng nhất */
+          .article-wrapper { padding: 20px 16px !important; }
+          .article-grid {
+            grid-template-columns: 1fr !important;
+            padding: 0 !important;
+            gap: 0 !important;
+          }
+          .sidebar-left  { display: none !important; }
           .sidebar-right { display: none !important; }
-          .article-main { order: 1 !important; }
-          .related-grid { grid-template-columns: 1fr !important; }
-          .article-cta { flex-direction: column !important; gap: 12px !important; }
+          .article-main  { order: 1 !important; }
+
+          /* Typography */
+          .article-content { font-size: 14px !important; line-height: 1.8 !important; }
+          .article-content h2 { font-size: 17px !important; margin: 24px 0 12px !important; padding-left: 11px !important; }
+          .article-content h3 { font-size: 15px !important; margin: 18px 0 8px !important; }
+          .article-content h4 { font-size: 13px !important; }
+          .article-content blockquote { padding: 12px 14px !important; font-size: 13px !important; }
+
+          /* Table — scroll ngang thay vì tràn màn hình */
+          .article-content table {
+            display: block !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            font-size: 12px !important;
+          }
+          .article-content th, .article-content td { padding: 7px 10px !important; }
+
+          /* Key Takeaways */
+          .takeaways-box { margin-bottom: 20px !important; }
+          .takeaways-box .takeaways-title { font-size: 13px !important; }
+          .takeaways-box p { font-size: 13px !important; line-height: 1.6 !important; }
+
+          /* Related — giữ 2 cột thay vì 1 */
+          .related-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          .related-card { min-height: 140px !important; }
+          .related-card-date  { font-size: 9px !important; }
+          .related-card-title { font-size: 11px !important; }
+
+          /* Share */
+          .share-row { flex-wrap: wrap !important; gap: 8px !important; margin-top: 28px !important; padding-top: 16px !important; }
+          .share-btn { width: 36px !important; height: 36px !important; font-size: 11px !important; border-radius: 10px !important; }
+
+          /* Disclaimer */
+          .disclaimer-box {
+            margin-top: 24px !important;
+            padding: 12px !important;
+            font-size: 11px !important;
+            line-height: 1.6 !important;
+            border-radius: 6px !important;
+          }
+
+          /* Lock screen */
+          .lock-screen h3 { font-size: 17px !important; }
+          .lock-screen p  { font-size: 12px !important; }
+          .lock-cta-btn   { min-width: 180px !important; padding: 11px 24px !important; font-size: 13px !important; }
         }
+
+        /* ─── LIGHTBOX ─── */
         #lb-overlay {
           display: none; position: fixed; inset: 0; z-index: 9999;
           background: rgba(0,0,0,0.93); align-items: center; justify-content: center;
@@ -181,9 +241,7 @@ export default async function ArticleDetailPage({
         #lb-img {
           max-width: 90vw; max-height: 90vh;
           border-radius: 8px; object-fit: contain;
-          transform-origin: 0 0;
-          cursor: grab; user-select: none;
-          transition: none;
+          transform-origin: 0 0; cursor: grab; user-select: none; transition: none;
         }
         #lb-img.dragging { cursor: grabbing; }
         #lb-close {
@@ -191,26 +249,30 @@ export default async function ArticleDetailPage({
           width: 36px; height: 36px; border-radius: 50%;
           background: rgba(255,255,255,0.15); border: none;
           color: #fff; font-size: 18px; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          z-index: 10000;
+          display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
         #lb-close:hover { background: rgba(255,255,255,0.25); }
         #lb-hint {
           position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
           color: rgba(255,255,255,0.45); font-size: 11px; pointer-events: none;
         }
-        .article-content img { cursor: zoom-in; transition: opacity 0.15s; border-radius: 8px; margin: 16px 0; max-width: 100%; }
+
+        /* ─── ARTICLE IMAGES ─── */
+        .article-content img {
+          cursor: zoom-in; transition: opacity 0.15s;
+          border-radius: 8px; margin: 16px 0; max-width: 100%;
+        }
         .article-content img:hover { opacity: 0.88; }
       `}</style>
 
-      {/* LIGHTBOX HTML */}
+      {/* ─── LIGHTBOX HTML ─── */}
       <div id="lb-overlay">
         <button id="lb-close" aria-label="Đóng">✕</button>
         <img id="lb-img" alt="Preview" draggable="false" />
         <div id="lb-hint">Cuộn để zoom · Kéo để di chuyển · Esc để đóng</div>
       </div>
 
-      {/* LIGHTBOX SCRIPT */}
+      {/* ─── LIGHTBOX SCRIPT ─── */}
       <script dangerouslySetInnerHTML={{ __html: `
         (function() {
           var overlay = document.getElementById('lb-overlay');
@@ -222,37 +284,23 @@ export default async function ArticleDetailPage({
           function applyTransform() {
             img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
           }
-
           function openLightbox(src) {
-            img.src = src;
-            scale = 1; tx = 0; ty = 0;
+            img.src = src; scale = 1; tx = 0; ty = 0;
             applyTransform();
             overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
           }
-
           function closeLightbox() {
             overlay.classList.remove('open');
             document.body.style.overflow = '';
           }
-
           document.addEventListener('click', function(e) {
             var t = e.target;
-            if (t.tagName === 'IMG' && t.closest('.article-content')) {
-              openLightbox(t.src);
-            }
+            if (t.tagName === 'IMG' && t.closest('.article-content')) openLightbox(t.src);
           });
-
           closeBtn.addEventListener('click', closeLightbox);
-
-          overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) closeLightbox();
-          });
-
-          document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeLightbox();
-          });
-
+          overlay.addEventListener('click', function(e) { if (e.target === overlay) closeLightbox(); });
+          document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
           overlay.addEventListener('wheel', function(e) {
             e.preventDefault();
             var rect = img.getBoundingClientRect();
@@ -265,32 +313,24 @@ export default async function ArticleDetailPage({
             scale = newScale;
             applyTransform();
           }, { passive: false });
-
           img.addEventListener('mousedown', function(e) {
-            dragging = true;
-            startX = e.clientX; startY = e.clientY;
+            dragging = true; startX = e.clientX; startY = e.clientY;
             startTx = tx; startTy = ty;
-            img.classList.add('dragging');
-            e.preventDefault();
+            img.classList.add('dragging'); e.preventDefault();
           });
-
           document.addEventListener('mousemove', function(e) {
             if (!dragging) return;
             tx = startTx + (e.clientX - startX);
             ty = startTy + (e.clientY - startY);
             applyTransform();
           });
-
-          document.addEventListener('mouseup', function() {
-            dragging = false;
-            img.classList.remove('dragging');
-          });
+          document.addEventListener('mouseup', function() { dragging = false; img.classList.remove('dragging'); });
         })();
       `}} />
 
       <Navbar />
 
-      {/* HERO IMAGE */}
+      {/* ─── HERO IMAGE ─── */}
       <div className="article-hero" style={{
         position: "relative", width: "100%", height: "480px",
         background: a.thumbnail_url
@@ -311,8 +351,8 @@ export default async function ArticleDetailPage({
         </div>
       </div>
 
-      {/* BREADCRUMB */}
-      <div className="breadcrumb" style={{ background: "#f7f8fa", borderBottom: "1px solid #e8ecef", padding: "10px 40px", fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+      {/* ─── BREADCRUMB ─── */}
+      <div className="breadcrumb" style={{ background: "#f7f8fa", borderBottom: "1px solid #e8ecef", padding: "10px 40px", fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
         <Link href="/" style={{ color: "#64748b", textDecoration: "none" }}>Trang chủ</Link>
         <span>›</span>
         <Link href="/phan-tich" style={{ color: "#64748b", textDecoration: "none" }}>Phân tích</Link>
@@ -322,7 +362,7 @@ export default async function ArticleDetailPage({
         <span className="breadcrumb-title" style={{ color: "#0A1628", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
       </div>
 
-      {/* MAIN 3-COLUMN GRID */}
+      {/* ─── MAIN 3-COLUMN GRID ─── */}
       <div className="article-wrapper" style={{ maxWidth: "1440px", margin: "0 auto", padding: "32px 40px" }}>
         <div className="article-grid" style={{ display: "grid", gridTemplateColumns: "22% minmax(0, 1fr) 18%", gap: "32px", alignItems: "start" }}>
 
@@ -336,15 +376,15 @@ export default async function ArticleDetailPage({
             </div>
           </aside>
 
-          {/* ARTICLE CONTENT */}
+          {/* ─── ARTICLE CONTENT ─── */}
           <article className="article-main">
 
             {/* KEY TAKEAWAYS */}
-            {takeaways.length > 0 && (
-              <div style={{ background: "#f0fdf8", border: "0.5px solid #bbf7e0", borderRadius: "12px", overflow: "hidden", marginBottom: "28px" }}>
+            {!isLocked && takeaways.length > 0 && (
+              <div className="takeaways-box" style={{ background: "#f0fdf8", border: "0.5px solid #bbf7e0", borderRadius: "12px", overflow: "hidden", marginBottom: "28px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 18px", borderBottom: "0.5px solid #bbf7e0" }}>
                   <i className="ti ti-target" style={{ fontSize: "18px", color: "#00C389" }} aria-hidden="true"></i>
-                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#0A1628" }}>Điểm chính cần nắm</span>
+                  <span className="takeaways-title" style={{ fontSize: "14px", fontWeight: 600, color: "#0A1628" }}>Điểm chính cần nắm</span>
                 </div>
                 <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {takeaways.map((point: string, i: number) => (
@@ -357,6 +397,21 @@ export default async function ArticleDetailPage({
               </div>
             )}
 
+            {/* ─── CTA MXV ─── */}
+            {!isLocked && (
+            <div style={{ padding: "20px 0 24px", marginBottom: "28px" }}>
+              <i className="ti ti-trending-up" style={{ fontSize: "20px", color: "#1D9E75", display: "block", marginBottom: "10px" }} aria-hidden="true" />
+              <p style={{ fontSize: "15px", fontWeight: 600, color: "#0A1628", lineHeight: 1.5, margin: "0 0 6px" }}>
+                Tiếp cận thị trường tỷ đô thông qua Sở giao dịch Hàng hoá Việt Nam (MXV)
+              </p>
+              <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, margin: "0 0 16px" }}>
+                Vô vàn cơ hội đầu tư dầu thô, cà phê, bạc, đồng và nhiều hàng hóa khác.
+              </p>
+              <Link href="/lien-he#dat-lich" style={{ fontSize: "13px", fontWeight: 600, color: "#0F6E56", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                Tư vấn ngay <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+)}
             <style>{`
               .article-content { font-size: 15px; color: #1e293b; line-height: 1.85; letter-spacing: 0.01em; }
               .article-content h2 { font-size: 22px; font-weight: 700; color: #0A1628; margin: 32px 0 14px; line-height: 1.35; border-left: 4px solid #00C389; padding-left: 14px; }
@@ -379,34 +434,17 @@ export default async function ArticleDetailPage({
               .article-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: monospace; color: #dc2626; }
               .article-content pre { background: #f1f5f9; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 16px 0; }
               .article-content pre code { background: none; padding: 0; color: #334155; }
-              @media (max-width: 768px) {
-                .article-content { font-size: 14px; }
-                .article-content h2 { font-size: 18px; }
-                .article-content h3 { font-size: 16px; }
-                .article-content table { font-size: 12px; }
-                .article-content th, .article-content td { padding: 7px 10px; }
-              }
             `}</style>
 
             {isLocked ? (
-              <div>
-                <div style={{ position: "relative" }}>
-                  <div className="article-content" dangerouslySetInnerHTML={{
-                    __html: (() => {
-                      const content = a.content ?? ""
-                      const cutoff = content.indexOf("</p>", 200)
-                      return cutoff > -1 ? content.slice(0, cutoff + 4) : content.slice(0, 300)
-                    })(),
-                  }} />
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "80px", background: "linear-gradient(to bottom, transparent, #fff)" }} />
-                </div>
+              <div className="lock-screen">
                 <div style={{ textAlign: "center", padding: "8px 0 40px" }}>
                   <h3 style={{ fontSize: "20px", fontWeight: 600, color: "#0A1628", marginBottom: "8px", lineHeight: 1.4 }}>
                     Đăng nhập hoặc tạo tài khoản<br />miễn phí để đọc tiếp
                   </h3>
                   <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "22px" }}>Phân tích chuyên sâu từ các chuyên gia BAMBOO100</p>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-                    <Link href="/dang-ky" style={{ display: "inline-block", background: "#00C389", color: "#fff", padding: "12px 36px", borderRadius: "8px", fontSize: "14px", fontWeight: 600, textDecoration: "none", minWidth: "220px", textAlign: "center" }}>Tạo tài khoản →</Link>
+                    <Link href="/dang-ky" className="lock-cta-btn" style={{ display: "inline-block", background: "#00C389", color: "#fff", padding: "12px 36px", borderRadius: "8px", fontSize: "14px", fontWeight: 600, textDecoration: "none", minWidth: "220px", textAlign: "center" }}>Tạo tài khoản →</Link>
                     <Link href={`/dang-nhap?redirect=/phan-tich/${a.slug}`} style={{ fontSize: "13px", color: "#64748b", textDecoration: "none" }}>Đăng nhập</Link>
                   </div>
                 </div>
@@ -417,29 +455,18 @@ export default async function ArticleDetailPage({
               }} />
             )}
 
-            {/* CTA */}
-            {!isLocked && (
-              <div className="article-cta" style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "24px", margin: "36px 0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px", background: "#f8fafc" }}>
-                <div>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#0A1628", marginBottom: "6px" }}>Tiếp cận hơn 500 cơ hội đầu tư hàng hóa</h3>
-                  <p style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.5 }}>Vàng, dầu thô, cà phê, đồng và nhiều hàng hóa khác — tất cả trong một nền tảng.</p>
-                  <Link href="/lien-he#dat-lich" style={{ display: "inline-block", marginTop: "12px", color: "#00C389", fontSize: "13px", fontWeight: 600, textDecoration: "none" }}>Tư vấn ngay →</Link>
-                </div>
-              </div>
-            )}
-
-            {/* RELATED */}
+            {/* ─── RELATED ARTICLES ─── */}
             {related && related.length > 0 && (
               <div style={{ marginTop: "40px" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#0A1628", marginBottom: "16px", paddingBottom: "10px", borderBottom: "2px solid #e5e5e5" }}>Bài phân tích liên quan</h3>
                 <div className="related-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
                   {related.slice(0, 4).map((rel: any) => (
                     <Link key={rel.id} href={`/phan-tich/${rel.slug}`} style={{ textDecoration: "none" }}>
-                      <div style={{ borderRadius: "10px", overflow: "hidden", background: rel.thumbnail_url ? `url(${rel.thumbnail_url}) center/cover` : "#0A1628", minHeight: "180px", position: "relative", cursor: "pointer" }}>
+                      <div className="related-card" style={{ borderRadius: "10px", overflow: "hidden", background: rel.thumbnail_url ? `url(${rel.thumbnail_url}) center/cover` : "#0A1628", minHeight: "180px", position: "relative", cursor: "pointer" }}>
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.92) 40%, rgba(0,0,0,0.3) 65%, transparent 100%)" }} />
                         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px" }}>
-                          {rel.published_at && <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", marginBottom: "4px" }}>{formatDateShort(rel.published_at)}</div>}
-                          <h4 style={{ color: "#fff", fontSize: "12px", fontWeight: 600, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as any}>{rel.title}</h4>
+                          {rel.published_at && <div className="related-card-date" style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", marginBottom: "4px" }}>{formatDateShort(rel.published_at)}</div>}
+                          <h4 className="related-card-title" style={{ color: "#fff", fontSize: "12px", fontWeight: 600, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as any}>{rel.title}</h4>
                         </div>
                       </div>
                     </Link>
@@ -448,27 +475,27 @@ export default async function ArticleDetailPage({
               </div>
             )}
 
-            {/* SHARE */}
-            <div style={{ marginTop: "36px", paddingTop: "20px", borderTop: "1px solid #e8ecef", display: "flex", alignItems: "center", gap: "10px" }}>
+            {/* ─── SHARE ─── */}
+            <div className="share-row" style={{ marginTop: "36px", paddingTop: "20px", borderTop: "1px solid #e8ecef", display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>Chia sẻ:</span>
               {[
                 { icon: "🔗", label: "Sao chép link", bg: "#f1f5f9", color: "#475569" },
-                { icon: "in", label: "LinkedIn", bg: "#0077B5", color: "#fff" },
-                { icon: "f",  label: "Facebook",  bg: "#1877F2", color: "#fff" },
-                { icon: "𝕏", label: "X (Twitter)", bg: "#000", color: "#fff" },
+                { icon: "in", label: "LinkedIn",      bg: "#0077B5", color: "#fff" },
+                { icon: "f",  label: "Facebook",      bg: "#1877F2", color: "#fff" },
+                { icon: "𝕏", label: "X (Twitter)",   bg: "#000",    color: "#fff" },
               ].map((s) => (
-                <button key={s.label} title={s.label} style={{ width: "34px", height: "34px", background: s.bg, color: s.color, border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon}</button>
+                <button key={s.label} className="share-btn" title={s.label} style={{ width: "34px", height: "34px", background: s.bg, color: s.color, border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon}</button>
               ))}
             </div>
 
-            {/* DISCLAIMER */}
-            <div style={{ marginTop: "32px", padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "10px", color: "#94a3b8", lineHeight: 1.7 }}>
+            {/* ─── DISCLAIMER ─── */}
+            <div className="disclaimer-box" style={{ marginTop: "32px", padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "10px", color: "#94a3b8", lineHeight: 1.7 }}>
               <strong style={{ color: "#64748b" }}>TUYÊN BỐ MIỄN TRÁCH NHIỆM:</strong>{" "}
               Nội dung bài viết này được cung cấp bởi BAMBOO100 chỉ mang tính chất thông tin và tham khảo, không cấu thành lời khuyên đầu tư. Giao dịch phái sinh hàng hóa có rủi ro cao. Bạn có thể mất toàn bộ vốn đầu tư. Hãy cân nhắc kỹ trước khi giao dịch.
             </div>
           </article>
 
-          {/* SIDEBAR PHẢI */}
+          {/* ─── SIDEBAR PHẢI ─── */}
           <aside className="sidebar-right" style={{ position: "sticky", top: "80px", alignSelf: "start" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {(productGroups ?? []).map((grp: any) => {

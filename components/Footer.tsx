@@ -33,26 +33,26 @@ export default function Footer() {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}
             >
-              f
+              <i className="ti ti-brand-facebook" style={{ fontSize: "16px" }} />
             </a>
             <a
               href="https://t.me"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}
             >
-              ✈
+              <i className="ti ti-brand-telegram" style={{ fontSize: "16px" }} />
             </a>
             <a
               href="#"
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm transition-colors"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}
             >
-              💬
+              <i className="ti ti-message-circle" style={{ fontSize: "16px" }} />
             </a>
           </div>
         </div>
@@ -108,22 +108,21 @@ export default function Footer() {
           <h3 className="font-semibold text-sm text-white mb-5">Liên hệ</h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
-              <span style={{ color: "#00C389" }} className="mt-0.5 text-sm">✉</span>
+              <i className="ti ti-mail" style={{ fontSize: "15px", color: "#00C389", flexShrink: 0, marginTop: "2px" }} />
               <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
                 daucohanghoa@gmail.com
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span style={{ color: "#00C389" }} className="mt-0.5 text-sm">📞</span>
+              <i className="ti ti-phone" style={{ fontSize: "15px", color: "#00C389", flexShrink: 0, marginTop: "2px" }} />
               <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
                 +84378219712
               </span>
             </li>
             <li className="flex items-start gap-3">
-              <span style={{ color: "#00C389" }} className="mt-0.5 text-sm">📍</span>
+              <i className="ti ti-map-pin" style={{ fontSize: "15px", color: "#00C389", flexShrink: 0, marginTop: "2px" }} />
               <span className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
-                Tầng 7, số 5B ngõ 55 Huỳnh Thúc Kháng,<br />
-                Đống Đa, Hà Nội, Việt Nam
+                Tầng 7, số 5B ngõ 55 Huỳnh Thúc Kháng, Đống Đa, Hà Nội
               </span>
             </li>
           </ul>

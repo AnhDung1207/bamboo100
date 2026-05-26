@@ -10,6 +10,17 @@ export const metadata: Metadata = {
   description: "Phân tích cung-cầu chuyên sâu về vàng, dầu thô, cà phê, đồng và các hàng hóa phái sinh.",
 }
 
+const FILTER_TABS = [
+  { label: "Tất cả",              slug: "",                        icon: "ti-layout-grid",       color: "#00C389" },
+  { label: "Hot news",            slug: "hot-news",                icon: "ti-flame",             color: "#dc2626" },
+  { label: "Kim loại",            slug: "kim-loai",                icon: "ti-medal",             color: "#EF9F27" },
+  { label: "Nông sản",            slug: "nong-san",                icon: "ti-plant-2",           color: "#639922" },
+  { label: "Nguyên liệu CN",      slug: "nguyen-lieu-cong-nghiep", icon: "ti-building-factory",  color: "#BA7517" },
+  { label: "Năng lượng",          slug: "nang-luong",              icon: "ti-bolt",              color: "#E24B4A" },
+  { label: "Phân tích kỹ thuật",  slug: "phan-tich-ky-thuat",      icon: "ti-chart-candle",      color: "#6D28D9" },
+  { label: "Báo cáo kinh tế",     slug: "bao-cao-kinh-te",         icon: "ti-file-text",         color: "#1D4ED8" },
+]
+
 export default async function PhanTichPage({
   searchParams,
 }: {
@@ -50,74 +61,89 @@ export default async function PhanTichPage({
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", minHeight: "100vh", background: "#fff" }}>
 
-      {/* ── MOBILE CSS ── */}
       <style>{`
         @media (max-width: 768px) {
-          /* Navbar — handled by shared Navbar component */
           .nav-links  { display: none !important; }
           .nav-login  { display: none !important; }
           .hamburger  { display: flex !important; }
 
-          /* Category filter */
-          .category-bar {
-            padding: 0 16px !important;
-            top: 60px !important;
-          }
+          .category-bar { padding: 0 16px !important; top: 60px !important; }
 
-          /* Main layout — 1 cột, sidebar xuống dưới feed */
           .main-grid {
             grid-template-columns: 1fr !important;
             padding: 20px 16px !important;
             gap: 24px !important;
           }
 
-          /* Sidebar: bỏ sticky, hiện bình thường dưới feed */
-          .sidebar-right {
-            position: static !important;
-          }
-
-          /* Ẩn search + price widget trên mobile — giữ CTA */
-          .sidebar-search  { display: none !important; }
-          .sidebar-prices  { display: none !important; }
+          .sidebar-right  { position: static !important; }
+          .sidebar-search { display: none !important; }
+          .sidebar-prices { display: none !important; }
         }
+
+        /* ── PILL STYLES ── */
+        .filter-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 14px;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 500;
+          text-decoration: none;
+          white-space: nowrap;
+          border: 1px solid #e2e8f0;
+          background: transparent;
+          color: #64748b;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
+        }
+        .filter-pill:hover {
+          border-color: #cbd5e1;
+          color: #0A1628;
+          background: #f8fafc;
+        }
+        .filter-pill i { font-size: 14px; }
+
+        /* Active states per category */
+        .pill-all.active      { color: #00C389; border-color: #00C389; background: #f0fdf8; }
+        .pill-hot.active      { color: #dc2626; border-color: #dc2626; background: #fef2f2; }
+        .pill-kim-loai.active { color: #EF9F27; border-color: #EF9F27; background: #fffbeb; }
+        .pill-nong-san.active { color: #639922; border-color: #639922; background: #f7fee7; }
+        .pill-cn.active       { color: #BA7517; border-color: #BA7517; background: #fefce8; }
+        .pill-nl.active       { color: #E24B4A; border-color: #E24B4A; background: #fef2f2; }
+        .pill-kt.active       { color: #6D28D9; border-color: #6D28D9; background: #f5f3ff; }
+        .pill-bc.active       { color: #1D4ED8; border-color: #1D4ED8; background: #eff6ff; }
       `}</style>
 
-      {/* ── NAVBAR (dùng chung) ── */}
       <Navbar />
 
-      {/* CATEGORY FILTER BAR */}
+      {/* ── CATEGORY FILTER BAR ── */}
       <div className="category-bar" style={{
         borderBottom: "1px solid #e8ecef",
         padding: "0 40px",
         background: "#fff",
         position: "sticky", top: "60px", zIndex: 99,
       }}>
-        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none" as any, gap: "4px", padding: "10px 0" }}>
-          {[
-            { label: "Tất cả tin tức", slug: "" },
-            { label: "Hot news", slug: "hot-news" },
-            { label: "Nông sản", slug: "nong-san" },
-            { label: "Nguyên Liệu Công Nghiệp", slug: "nguyen-lieu-cong-nghiep" },
-            { label: "Kim Loại", slug: "kim-loai" },
-            { label: "Năng Lượng", slug: "nang-luong" },
-            { label: "Phân tích kỹ thuật", slug: "phan-tich-ky-thuat" },
-            { label: "Báo cáo kinh tế", slug: "bao-cao-kinh-te" },
-          ].map((cat) => {
-            const isActive = (!category && cat.slug === "") || category === cat.slug
+        <div style={{
+          display: "flex", overflowX: "auto",
+          scrollbarWidth: "none" as any,
+          gap: "8px", padding: "10px 0",
+        }}>
+          {FILTER_TABS.map((tab) => {
+            const isActive = (!category && tab.slug === "") || category === tab.slug
+            const pillClass = [
+              "filter-pill",
+              `pill-${tab.slug || "all"}`,
+              isActive ? "active" : "",
+            ].join(" ")
             return (
-              <Link key={cat.slug} href={cat.slug ? `/phan-tich?category=${cat.slug}` : "/phan-tich"} style={{
-                display: "flex", alignItems: "center",
-                padding: "6px 16px",
-                fontSize: "13px",
-                fontWeight: isActive ? 700 : 400,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                color: isActive ? "#0A1628" : "#64748b",
-                borderRadius: "20px",
-                border: isActive ? "1.5px solid #0A1628" : "1.5px solid transparent",
-                background: "transparent",
-                letterSpacing: "0.01em",
-              }}>{cat.label}</Link>
+              <Link
+                key={tab.slug}
+                href={tab.slug ? `/phan-tich?category=${tab.slug}` : "/phan-tich"}
+                className={pillClass}
+              >
+                <i className={`ti ${tab.icon}`} aria-hidden="true" />
+                {tab.label}
+              </Link>
             )
           })}
         </div>

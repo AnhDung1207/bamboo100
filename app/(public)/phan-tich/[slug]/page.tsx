@@ -339,6 +339,7 @@ export default async function ArticleDetailPage({
         overflow: "hidden",
       }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 15%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.15) 45%, transparent 60%)" }} />
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "160px", background: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)", pointerEvents: "none" }} />
         <div className="article-hero-text" style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 40px 4px", textAlign: "center" }}>
           {a.published_at && (
             <div style={{ display: "inline-block", background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)", color: "rgba(255,255,255,0.85)", fontSize: "11px", padding: "4px 12px", borderRadius: "20px", marginBottom: "14px", letterSpacing: "0.02em" }}>

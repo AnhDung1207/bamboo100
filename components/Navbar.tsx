@@ -43,7 +43,7 @@ const HOC_VIEN_MENU = [
 export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
-  const isDarkHero = pathname === "/"
+  const isDarkHero = pathname === "/" || pathname.startsWith("/phan-tich/") || pathname.startsWith("/hoc-vien/nen-tang-kien-thuc/")
   const isHiddenRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin")
   const supabase = createClient()
 
@@ -142,12 +142,12 @@ export default function Navbar() {
   const isAdminOrEditor = profile?.role === "admin" || profile?.role === "editor"
 
   // ── MÀU SẮC NAVBAR ──
-  const SCROLL_THRESHOLD = 300
-  const ratio = Math.min(scrollY / SCROLL_THRESHOLD, 1)
+  // FIX 1: Giảm threshold từ 300 → 180 để transition nhanh hơn như XTB
+  const SCROLL_THRESHOLD = 80
+  const rawRatio = Math.min(scrollY / SCROLL_THRESHOLD, 1)
+const ratio = Math.pow(rawRatio, 0.6)
   const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t)
 
-  // Trang chủ: logic gốc scroll-based
-  // Trang trắng: luôn dùng màu tối
   const navBg = isDarkHero
     ? `rgba(255,255,255,${ratio})`
     : "rgba(255,255,255,0.97)"
@@ -160,28 +160,29 @@ export default function Navbar() {
     ? (ratio > 0.05 ? `0 2px 20px rgba(0,0,0,${0.08 * ratio})` : "none")
     : (ratio > 0.05 ? `0 1px 10px rgba(0,0,0,${0.05 * ratio})` : "none")
 
-  // Accent line (chỉ trang trắng)
   const accentScaleX = isDarkHero ? 0 : ratio
 
-  // Màu chữ
+  // FIX 2: Opacity chữ trắng = 1 (thay vì 0.65) khi ở đầu trang — giống XTB
   const linkColor = isDarkHero
-    ? `rgba(${lerp(255,15,ratio)},${lerp(255,25,ratio)},${lerp(255,50,ratio)},${(0.65 + 0.15 * ratio).toFixed(2)})`
-    : "rgba(15,25,50,0.85)"
+    ? `rgba(${lerp(255, 15, ratio)},${lerp(255, 25, ratio)},${lerp(255, 50, ratio)},1)`
+    : "rgba(15,25,50,1)"
 
   const logoColor = isDarkHero
-    ? `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+    ? `rgb(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)})`
     : "rgb(10,22,40)"
 
+  // FIX 3: loginColor opacity = 1 thay vì 0.75
   const loginColor = isDarkHero
-    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.75 + 0.25 * ratio).toFixed(2)})`
-    : "rgba(10,22,40,0.85)"
+    ? `rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},1)`
+    : "rgba(10,22,40,1)"
 
+  // FIX 4: loginBorder rõ hơn ở đầu trang (opacity 0.5 → đủ thấy trên hero tối)
   const loginBorder = isDarkHero
-    ? `1px solid rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},${(0.2 + 0.1 * ratio).toFixed(2)})`
-    : "1px solid rgba(10,22,40,0.15)"
+    ? `1px solid rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},${(0.5 - 0.35 * ratio).toFixed(2)})`
+    : "1px solid rgba(10,22,40,0.25)"
 
   const hamColor = isDarkHero
-    ? `rgb(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)})`
+    ? `rgb(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)})`
     : "rgb(10,22,40)"
 
   const userBtnBg = isDarkHero
@@ -193,12 +194,12 @@ export default function Navbar() {
     : "1px solid rgba(0,195,137,0.35)"
 
   const userNameColor = isDarkHero
-    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.85)`
-    : "rgba(10,22,40,0.85)"
+    ? `rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},1)`
+    : "rgba(10,22,40,1)"
 
   const chevronColor = isDarkHero
-    ? `rgba(${lerp(255,10,ratio)},${lerp(255,22,ratio)},${lerp(255,40,ratio)},0.4)`
-    : "rgba(10,22,40,0.4)"
+    ? `rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},${(0.6 - 0.2 * ratio).toFixed(2)})`
+    : "rgba(10,22,40,1)"
 
   return (
     <>
@@ -250,7 +251,7 @@ export default function Navbar() {
         @media (max-width: 767px) {
           .nb-desktop   { display: none !important; }
           .nb-hamburger { display: flex !important; }
-        .nb-nav { padding: 0 16px !important; }
+          .nb-nav { padding: 0 16px !important; }
         }
       `}</style>
 
@@ -258,7 +259,8 @@ export default function Navbar() {
         <nav className="nb-nav" style={{
           background: navBg,
           boxShadow,
-          transition: "background 0.25s ease, box-shadow 0.25s ease",
+          // FIX 5: Thêm border-color vào transition để không bị flash
+          transition: "background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
           display: "flex", alignItems: "center",
           justifyContent: "flex-start", gap: "8px", padding: "0 40px", height: "60px",
           borderBottom: `1px solid ${borderColor}`,
@@ -280,7 +282,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
             <img src="/o.png" alt="BAMBOO100" style={{ width: "34px", height: "34px", borderRadius: "8px" }} />
-            <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "0.04em", color: logoColor, transition: "color 0.35s" }}>
+            <span style={{ fontSize: "15px", fontWeight: 700, letterSpacing: "0.04em", color: logoColor, transition: "color 0.3s ease" }}>
               BAMBOO<span style={{ color: "#00C389" }}>100</span>
             </span>
           </Link>
@@ -291,18 +293,18 @@ export default function Navbar() {
               <Link key={item.label} href={item.href} style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
-                transition: "color 0.35s",
+                transition: "color 0.3s ease",
               }}>{item.label}</Link>
             ))}
 
             {/* Học viện mega menu */}
             <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "relative" }}>
               <span style={{
-  color: linkColor, fontSize: "13px", fontWeight: 600,
-  padding: "6px 12px", borderRadius: "6px",
-  display: "flex", alignItems: "center", transition: "color 0.35s",
-  cursor: "default",
-}}>Học viện</span>
+                color: linkColor, fontSize: "13px", fontWeight: 600,
+                padding: "6px 12px", borderRadius: "6px",
+                display: "flex", alignItems: "center", transition: "color 0.3s ease",
+                cursor: "default",
+              }}>Học viện</span>
 
               {megaOpen && (
                 <div className="mega-menu" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
@@ -329,7 +331,7 @@ export default function Navbar() {
               <Link key={item.label} href={item.href} style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
-                transition: "color 0.35s",
+                transition: "color 0.3s ease",
               }}>{item.label}</Link>
             ))}
           </div>
@@ -344,7 +346,7 @@ export default function Navbar() {
                     display: "flex", alignItems: "center", gap: "8px",
                     background: userBtnBg, border: userBtnBorder,
                     borderRadius: "8px", padding: "6px 12px 6px 6px",
-                    cursor: "pointer", transition: "background 0.25s ease, border-color 0.25s ease",
+                    cursor: "pointer", transition: "background 0.3s ease, border-color 0.3s ease",
                   }}
                   onMouseOver={e => (e.currentTarget.style.borderColor = "rgba(0,195,137,0.6)")}
                   onMouseOut={e => (e.currentTarget.style.borderColor = "")}
@@ -357,13 +359,13 @@ export default function Navbar() {
                   }}>
                     {avatarLetter}
                   </div>
-                  <span style={{ color: userNameColor, fontSize: "13px", fontWeight: 600, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.25s ease" }}>
+                  <span style={{ color: userNameColor, fontSize: "13px", fontWeight: 600, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "color 0.3s ease" }}>
                     {displayName}
                   </span>
                   <ChevronDown
                     size={13}
                     color={chevronColor}
-                    style={{ flexShrink: 0, transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s, color 0.25s ease" }}
+                    style={{ flexShrink: 0, transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s, color 0.3s ease" }}
                   />
                 </button>
 
@@ -406,7 +408,7 @@ export default function Navbar() {
                 <Link href="/dang-nhap" className="nb-desktop" style={{
                   color: loginColor, fontSize: "13px", fontWeight: 600, padding: "7px 16px",
                   border: loginBorder, borderRadius: "7px", textDecoration: "none",
-                  transition: "color 0.35s, border 0.35s",
+                  transition: "color 0.3s ease, border-color 0.3s ease",
                 }}>Đăng nhập</Link>
                 <Link href="/lien-he#dat-lich" className="nb-desktop" style={{
                   background: "#00C389", color: "#fff", fontSize: "13px",
@@ -430,7 +432,7 @@ export default function Navbar() {
                 <span key={i} style={{
                   display: "block", width: "22px", height: "2px",
                   background: hamColor, borderRadius: "2px",
-                  transition: "background 0.35s",
+                  transition: "background 0.3s ease",
                 }} />
               ))}
             </button>

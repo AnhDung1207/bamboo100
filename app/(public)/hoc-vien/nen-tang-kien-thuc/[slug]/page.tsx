@@ -472,7 +472,7 @@ export default async function KienThucDetailPage({
           </article>
 
           {/* SIDEBAR PHẢI — Mục lục */}
-          <aside className="sidebar-right" style={{ position: "sticky", top: "90px", alignSelf: "start" }}>
+          <aside className="sidebar-right" style={{ position: "fixed", top: "90px", right: "3%", width: "18%", zIndex: 10, pointerEvents: "none" }}>
             <TableOfContents />
           </aside>
 

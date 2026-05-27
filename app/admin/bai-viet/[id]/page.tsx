@@ -15,9 +15,11 @@ export default function SuaBaiViet() {
   const editorRef = useRef<HTMLDivElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
 
+  const [publishType, setPublishType] = useState<"analytics" | "knowledge">("analytics")
   const [categories, setCategories] = useState<any[]>([])
   const [productGroups, setProductGroups] = useState<any[]>([])
   const [filteredCategories, setFilteredCategories] = useState<any[]>([])
+  const [knowledgeCategories, setKnowledgeCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [saveStatus, setSaveStatus] = useState("")
@@ -34,14 +36,20 @@ export default function SuaBaiViet() {
   })
 
   useEffect(() => {
-    Promise.all([
-      supabase.from("categories").select("*").order("order_index"),
-      supabase.from("product_groups").select("*").order("order_index"),
-      supabase.from("articles").select("*").eq("id", id).single(),
-    ]).then(([{ data: cats }, { data: groups }, { data: article }]) => {
+    const init = async () => {
+      const [{ data: cats }, { data: groups }, { data: kCats }] = await Promise.all([
+        supabase.from("categories").select("*").order("order_index"),
+        supabase.from("product_groups").select("*").order("order_index"),
+        supabase.from("knowledge_categories").select("*").order("order_index"),
+      ])
       if (cats) setCategories(cats)
       if (groups) setProductGroups(groups)
+      if (kCats) setKnowledgeCategories(kCats)
+
+      // Thử query articles trước
+      const { data: article } = await supabase.from("articles").select("*").eq("id", id).single()
       if (article) {
+        setPublishType("analytics")
         setForm({
           title: article.title || "", slug: article.slug || "",
           excerpt: article.excerpt || "", content: article.content || "",
@@ -55,9 +63,31 @@ export default function SuaBaiViet() {
         })
         if (article.thumbnail_url) setThumbnailPreview(article.thumbnail_url)
         if (editorRef.current && article.content) editorRef.current.innerHTML = article.content
+        setFetching(false)
+        return
+      }
+
+      // Không có trong articles → thử knowledge_articles
+      const { data: ka } = await supabase.from("knowledge_articles").select("*").eq("id", id).single()
+      if (ka) {
+        setPublishType("knowledge")
+        setForm({
+          title: ka.title || "", slug: ka.slug || "",
+          excerpt: ka.excerpt || "", content: ka.content || "",
+          thumbnail_url: ka.thumbnail_url || "", category_id: ka.category_id || "",
+          group_id: "", read_time: ka.read_time?.toString() || "",
+          is_premium: false, is_hot: false,
+          status: ka.status || "draft",
+          published_at: ka.published_at
+            ? new Date(new Date(ka.published_at).getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 16) : "",
+          key_takeaways: "",
+        })
+        if (ka.thumbnail_url) setThumbnailPreview(ka.thumbnail_url)
+        if (editorRef.current && ka.content) editorRef.current.innerHTML = ka.content
       }
       setFetching(false)
-    })
+    }
+    init()
   }, [id])
 
   useEffect(() => {
@@ -114,23 +144,42 @@ export default function SuaBaiViet() {
   const handleSave = async (status: "draft" | "published") => {
     if (!form.title) { setSaveStatus("error-title"); return }
     setLoading(true); setSaveStatus("")
-    const payload = {
-      title: form.title, slug: form.slug, excerpt: form.excerpt || null,
-      content: form.content || null, category_id: form.category_id || null,
-      group_id: form.group_id || null, read_time: form.read_time ? parseInt(form.read_time) : null,
-      is_premium: form.is_premium, is_hot: form.is_hot,
-      thumbnail_url: form.thumbnail_url || null, key_takeaways: form.key_takeaways || null, status,
-      published_at: status === "published"
-        ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
-        : null,
-      updated_at: new Date().toISOString(),
+
+    if (publishType === "analytics") {
+      const payload = {
+        title: form.title, slug: form.slug, excerpt: form.excerpt || null,
+        content: form.content || null, category_id: form.category_id || null,
+        group_id: form.group_id || null, read_time: form.read_time ? parseInt(form.read_time) : null,
+        is_premium: form.is_premium, is_hot: form.is_hot,
+        thumbnail_url: form.thumbnail_url || null, key_takeaways: form.key_takeaways || null, status,
+        published_at: status === "published"
+          ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
+          : null,
+        updated_at: new Date().toISOString(),
+      }
+      const { error } = await supabase.from("articles").update(payload).eq("id", id)
+      if (error) { setSaveStatus("error"); setLoading(false); return }
+      await revalidateArticle(form.slug)
+      setTimeout(() => router.push("/admin/bai-viet"), 800)
+    } else {
+      const payload = {
+        title: form.title, slug: form.slug, excerpt: form.excerpt || null,
+        content: form.content || null, category_id: form.category_id || null,
+        read_time: form.read_time ? parseInt(form.read_time) : null,
+        thumbnail_url: form.thumbnail_url || null, status,
+        published_at: status === "published"
+          ? (form.published_at ? new Date(new Date(form.published_at + "Z").getTime() - 7 * 60 * 60 * 1000).toISOString() : new Date().toISOString())
+          : null,
+        updated_at: new Date().toISOString(),
+      }
+      const { error } = await supabase.from("knowledge_articles").update(payload).eq("id", id)
+      if (error) { setSaveStatus("error"); setLoading(false); return }
+      setTimeout(() => router.push("/admin/kien-thuc"), 800)
     }
-    const { error } = await supabase.from("articles").update(payload).eq("id", id)
-    if (error) { setSaveStatus("error"); setLoading(false); return }
-    await revalidateArticle(form.slug)
-    setSaveStatus("success"); setLoading(false)
+
+    setSaveStatus("success")
+    setLoading(false)
     router.refresh()
-    setTimeout(() => router.push("/admin/bai-viet"), 800)
   }
 
   if (fetching) return (
@@ -145,6 +194,21 @@ export default function SuaBaiViet() {
 
   const SidebarContent = () => (
     <>
+      {/* Loại bài — chỉ hiển thị, không cho đổi khi sửa */}
+      <div style={cardStyle}>
+        <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Loại bài viết</h3>
+        <div style={{
+          padding: "10px 14px", borderRadius: "8px",
+          background: publishType === "analytics" ? "#f0fdf8" : "#eff6ff",
+          border: `1.5px solid ${publishType === "analytics" ? "#00C389" : "#3b82f6"}`,
+          fontSize: "13px", fontWeight: 600,
+          color: publishType === "analytics" ? "#00C389" : "#3b82f6",
+        }}>
+          {publishType === "analytics" ? "📊 Phân tích thị trường" : "📚 Kiến thức nền tảng"}
+        </div>
+      </div>
+
+      {/* Thumbnail */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Ảnh thumbnail</h3>
         <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }}
@@ -166,6 +230,7 @@ export default function SuaBaiViet() {
         )}
       </div>
 
+      {/* Publish */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "14px" }}>Xuất bản</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -181,7 +246,7 @@ export default function SuaBaiViet() {
             <input type="datetime-local" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} style={inputStyle} />
             <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Để trống = đăng ngay lập tức</p>
           </div>
-          {[
+          {publishType === "analytics" && [
             { key: "is_premium", label: "Bài Premium", desc: "Yêu cầu đăng nhập để đọc", color: "#00C389" },
             { key: "is_hot", label: "🔥 Bài Hot", desc: "Hiển thị badge Hot trên feed", color: "#E24B4A" },
           ].map((toggle) => (
@@ -199,28 +264,42 @@ export default function SuaBaiViet() {
         </div>
       </div>
 
+      {/* Category */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Phân loại</h3>
-        <div style={{ marginBottom: "10px" }}>
-          <label style={labelStyle}>Nhóm ngành</label>
-          <select value={form.group_id} onChange={(e) => setForm({ ...form, group_id: e.target.value, category_id: "" })} style={inputStyle}>
-            <option value="">-- Chọn nhóm ngành --</option>
-            {productGroups.map((g) => <option key={g.id} value={g.id}>{g.icon} {g.name}</option>)}
-          </select>
-        </div>
-        {form.group_id && (
-          <div>
-            <label style={labelStyle}>Sản phẩm cụ thể</label>
-            {filteredCategories.length > 0 ? (
-              <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
-                <option value="">-- Chọn sản phẩm --</option>
-                {filteredCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+        {publishType === "analytics" ? (
+          <>
+            <div style={{ marginBottom: "10px" }}>
+              <label style={labelStyle}>Nhóm ngành</label>
+              <select value={form.group_id} onChange={(e) => setForm({ ...form, group_id: e.target.value, category_id: "" })} style={inputStyle}>
+                <option value="">-- Chọn nhóm ngành --</option>
+                {productGroups.map((g) => <option key={g.id} value={g.id}>{g.icon} {g.name}</option>)}
               </select>
-            ) : <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>Nhóm này không có sản phẩm con</p>}
+            </div>
+            {form.group_id && (
+              <div>
+                <label style={labelStyle}>Sản phẩm cụ thể</label>
+                {filteredCategories.length > 0 ? (
+                  <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
+                    <option value="">-- Chọn sản phẩm --</option>
+                    {filteredCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                ) : <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>Nhóm này không có sản phẩm con</p>}
+              </div>
+            )}
+          </>
+        ) : (
+          <div>
+            <label style={labelStyle}>Chủ đề</label>
+            <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} style={inputStyle}>
+              <option value="">-- Chọn chủ đề --</option>
+              {knowledgeCategories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+            </select>
           </div>
         )}
       </div>
 
+      {/* Read time */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Thời gian đọc</h3>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -259,7 +338,8 @@ export default function SuaBaiViet() {
       {/* TOPBAR */}
       <div className="editor-topbar" style={{ background: "#fff", borderBottom: "0.5px solid #e2e8f0", padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Link href="/admin/bai-viet" style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", textDecoration: "none", fontSize: "13px" }}>
+          <Link href={publishType === "knowledge" ? "/admin/kien-thuc" : "/admin/bai-viet"}
+            style={{ display: "flex", alignItems: "center", gap: "5px", color: "#64748b", textDecoration: "none", fontSize: "13px" }}>
             <i className="ti ti-arrow-left" style={{ fontSize: "14px" }} />
             Quay lại
           </Link>
@@ -276,9 +356,12 @@ export default function SuaBaiViet() {
             <i className="ti ti-settings" style={{ fontSize: "14px" }} />
           </button>
 
-          <Link href={`/phan-tich/${form.slug}`} target="_blank" style={{ padding: "7px 12px", borderRadius: "7px", background: "#fff", border: "0.5px solid #e2e8f0", color: "#64748b", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", gap: "5px" }}>
-            <i className="ti ti-external-link" style={{ fontSize: "13px" }} />
-          </Link>
+          {publishType === "analytics" && (
+            <Link href={`/phan-tich/${form.slug}`} target="_blank" style={{ padding: "7px 12px", borderRadius: "7px", background: "#fff", border: "0.5px solid #e2e8f0", color: "#64748b", fontSize: "13px", textDecoration: "none", display: "flex", alignItems: "center", gap: "5px" }}>
+              <i className="ti ti-external-link" style={{ fontSize: "13px" }} />
+            </Link>
+          )}
+
           <button onClick={() => handleSave("draft")} disabled={loading} style={{ padding: "7px 16px", borderRadius: "7px", background: "#fff", border: "0.5px solid #e2e8f0", color: "#64748b", fontSize: "13px", fontWeight: 500, cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
             {loading ? "..." : "Nháp"}
           </button>
@@ -310,13 +393,15 @@ export default function SuaBaiViet() {
                 style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.6, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
             </div>
 
-            <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "16px 24px" }}>
-              <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>Key Takeaways</label>
-              <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 8px" }}>Mỗi dòng là 1 bullet.</p>
-              <textarea value={form.key_takeaways} onChange={(e) => { const el = e.target; el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; setForm({ ...form, key_takeaways: e.target.value }) }} rows={3}
-                placeholder={"Giá vàng tăng mạnh...\nDầu thô WTI vượt mốc..."}
-                style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.7, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box", overflow: "hidden" }} />
-            </div>
+            {publishType === "analytics" && (
+              <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "16px 24px" }}>
+                <label style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>Key Takeaways</label>
+                <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 8px" }}>Mỗi dòng là 1 bullet.</p>
+                <textarea value={form.key_takeaways} onChange={(e) => { const el = e.target; el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; setForm({ ...form, key_takeaways: e.target.value }) }} rows={3}
+                  placeholder={"Giá vàng tăng mạnh...\nDầu thô WTI vượt mốc..."}
+                  style={{ width: "100%", border: "none", outline: "none", fontSize: "14px", color: "#0A1628", lineHeight: 1.7, background: "transparent", resize: "none", fontFamily: "inherit", boxSizing: "border-box", overflow: "hidden" }} />
+              </div>
+            )}
 
             <div style={{ background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", overflow: "hidden" }}>
               <div style={{ padding: "12px 24px", borderBottom: "0.5px solid #e2e8f0", background: "#f8fafc", display: "flex", gap: "4px", flexWrap: "wrap" }}>
@@ -364,7 +449,7 @@ export default function SuaBaiViet() {
                   }
                 }}
                 style={{ minHeight: "400px", padding: "24px", fontSize: "15px", lineHeight: 1.8, color: "#0A1628", outline: "none", fontFamily: "inherit" }}
-                data-placeholder="Bắt đầu viết nội dung bài phân tích..." />
+                data-placeholder="Bắt đầu viết nội dung bài viết..." />
             </div>
           </div>
 

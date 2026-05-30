@@ -188,16 +188,6 @@ export default function HeroSection() {
 
       {/* LEFT */}
       <div style={{ position: "relative", zIndex: 2 }}>
-        <div className="hs-badges" style={{ display: "flex", gap: "8px", marginBottom: "28px", flexWrap: "wrap" }}>
-          {["35+ Sản phẩm hàng hóa", "Bán khống", "Giao dịch T+0"].map(t => (
-            <span key={t} style={{
-              display: "inline-flex", alignItems: "center",
-              background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: "20px", padding: "5px 14px",
-              fontSize: "12px", fontWeight: 500, color: "#0A1628", letterSpacing: "0.01em",
-            }}>{t}</span>
-          ))}
-        </div>
 
         <h1 className="hs-title" style={{
           fontSize: "clamp(34px, 4.5vw, 58px)", fontWeight: 800, color: "#0A1628",

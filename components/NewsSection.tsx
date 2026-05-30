@@ -4,6 +4,9 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
+type Category = { name: string; slug: string }
+type ProductGroup = { slug: string }
+
 type Article = {
   id: string
   slug: string
@@ -11,8 +14,8 @@ type Article = {
   published_at: string | null
   is_hot: boolean
   is_premium: boolean
-  categories: { name: string; slug: string } | null
-  product_groups: { slug: string } | null
+  categories: Category | Category[] | null
+  product_groups: ProductGroup | ProductGroup[] | null
 }
 
 const CATEGORY_THUMBNAILS: Record<string, string> = {
@@ -71,28 +74,32 @@ const GROUP_MAP: Record<string, string> = {
 function formatTime(dateStr: string) {
   const date = new Date(dateStr)
   const time = date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-  const day = date.getDate()
-  const month = date.getMonth() + 1
-  return `lúc ${time} ${day} tháng ${month}`
+  return `lúc ${time} ${date.getDate()} tháng ${date.getMonth() + 1}`
+}
+
+function getCategory(raw: Category | Category[] | null): Category | null {
+  if (!raw) return null
+  return Array.isArray(raw) ? (raw[0] ?? null) : raw
+}
+
+function getProductGroup(raw: ProductGroup | ProductGroup[] | null): ProductGroup | null {
+  if (!raw) return null
+  return Array.isArray(raw) ? (raw[0] ?? null) : raw
 }
 
 function SmallCard({ article }: { article: Article }) {
-  const catSlug = article.categories?.slug || ""
-  const groupSlug = article.product_groups?.slug || ""
+  const cat = getCategory(article.categories)
+  const pg = getProductGroup(article.product_groups)
+  const catSlug = cat?.slug || ""
+  const groupSlug = pg?.slug || ""
   const catIcon = CATEGORY_ICONS[catSlug] || "📊"
   const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
   const groupName = GROUP_MAP[catSlug] || "Hàng Hóa"
 
   return (
     <Link href={`/phan-tich/${article.slug}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
-      <div
-        style={{
-  padding: "14px 0",
-  cursor: "pointer", height: "100%",
-}}
-        onMouseOver={(e) => (e.currentTarget.style.borderColor = "#00C389")}
-        onMouseOut={(e) => (e.currentTarget.style.borderColor = "#e8ecef")}
-      >
+      <div style={{ padding: "14px 0", cursor: "pointer", height: "100%" }}>
+
         {/* Thumbnail + tên sản phẩm */}
         <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "9px" }}>
           <div style={{
@@ -107,7 +114,7 @@ function SmallCard({ article }: { article: Article }) {
             }
           </div>
           <span style={{ fontSize: "11px", color: "#64748b" }}>
-            {article.categories?.name || "Hàng Hóa"}
+            {cat?.name || "Hàng Hóa"}
           </span>
         </div>
 
@@ -125,7 +132,7 @@ function SmallCard({ article }: { article: Article }) {
         <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", fontSize: "11px", color: "#94a3b8" }}>
           <span>{groupName}</span>
           <span style={{ color: "#cbd5e1" }}>·</span>
-          <span>{article.categories?.name || "Hàng Hóa"}</span>
+          <span>{cat?.name || "Hàng Hóa"}</span>
           <span style={{ color: "#cbd5e1" }}>·</span>
           <span>{article.published_at ? formatTime(article.published_at) : ""}</span>
           {article.is_hot && (
@@ -159,11 +166,7 @@ export default function NewsSection() {
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(3)
-      if (data) setArticles(data.map((item: any) => ({
-  ...item,
-  categories: Array.isArray(item.categories) ? item.categories[0] ?? null : item.categories,
-  product_groups: Array.isArray(item.product_groups) ? item.product_groups[0] ?? null : item.product_groups,
-})))
+      if (data) setArticles(data as unknown as Article[])
       setLoading(false)
     }
     fetchArticles()
@@ -173,7 +176,6 @@ export default function NewsSection() {
     <section style={{ background: "#fff", padding: "72px 0" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 40px" }}>
 
-        {/* Badge */}
         <p style={{
           fontSize: "11px", fontWeight: 600, color: "#00C389",
           textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px",
@@ -181,7 +183,6 @@ export default function NewsSection() {
           Tin tức
         </p>
 
-        {/* Title */}
         <h2 style={{
           fontSize: "34px", fontWeight: 800, color: "#0A1628",
           letterSpacing: "-0.03em", lineHeight: 1.1, margin: "0 0 16px",
@@ -189,7 +190,6 @@ export default function NewsSection() {
           Bám sát thị trường với<br />tin tức mới nhất
         </h2>
 
-        {/* CTA */}
         <Link href="/phan-tich" style={{
           display: "inline-flex", alignItems: "center", gap: "5px",
           fontSize: "13px", fontWeight: 600, color: "#00C389",
@@ -198,11 +198,10 @@ export default function NewsSection() {
           Đọc tin tức thị trường →
         </Link>
 
-        {/* Cards */}
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {[1, 2, 3].map((i) => (
-              <div key={i} style={{ border: "1px solid #e8ecef", borderRadius: "10px", padding: "14px" }}>
+              <div key={i} style={{ padding: "14px 0" }}>
                 <div style={{ height: "26px", width: "40%", background: "#f1f5f9", borderRadius: "4px", marginBottom: "9px" }} />
                 <div style={{ height: "13px", background: "#f1f5f9", borderRadius: "4px", marginBottom: "6px" }} />
                 <div style={{ height: "13px", background: "#f1f5f9", borderRadius: "4px", width: "70%", marginBottom: "6px" }} />
@@ -211,10 +210,7 @@ export default function NewsSection() {
             ))}
           </div>
         ) : (
-          <div
-            className="news-grid"
-            style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}
-          >
+          <div className="news-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
             {articles.map((a) => <SmallCard key={a.id} article={a} />)}
           </div>
         )}
@@ -222,10 +218,7 @@ export default function NewsSection() {
 
       <style>{`
         @media (max-width: 768px) {
-          .news-grid {
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
-          }
+          .news-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
         }
       `}</style>
     </section>

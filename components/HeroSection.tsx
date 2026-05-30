@@ -104,7 +104,7 @@ export default function HeroSection() {
       @media (max-width: 768px) {
         .hero-wrap {
           grid-template-columns: 1fr !important;
-          padding: 48px 20px 32px !important;
+          padding: 65px 20px 32px !important;
           min-height: auto !important;
           gap: 32px !important;
         }

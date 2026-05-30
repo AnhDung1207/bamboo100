@@ -93,12 +93,12 @@ export default function AdvantagesSection() {
           marginBottom: "52px", gap: "16px", flexWrap: "wrap",
         }}>
           <h2 style={{
-            fontSize: "32px",
-            fontWeight: 700, lineHeight: 1.2,
+            fontSize: "34px",
+            fontWeight: 800, lineHeight: 1.2,
             color: "#0A1628", letterSpacing: "-0.02em",
             margin: 0, maxWidth: "480px",
           }}>
-            Giao dịch thông minh hơn,<br /> lợi nhuận tối ưu hơn
+            Đầu tư thông minh hơn
           </h2>
           <Link
             href="/lien-he"

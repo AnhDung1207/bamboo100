@@ -192,7 +192,7 @@ export default function HomePage() {
             Sản phẩm
           </p>
           <h2 style={{ fontSize: "34px", fontWeight: 800, color: "#0A1628", letterSpacing: "-0.03em", margin: "0 0 40px", lineHeight: 1.1 }}>
-            Giao dịch theo cách của bạn
+            Đa dạng sản phẩm đầu tư
           </h2>
           <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
             {PRODUCTS.map((p, i) => (

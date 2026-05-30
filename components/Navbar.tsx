@@ -288,7 +288,7 @@ const ratio = Math.pow(rawRatio, 0.6)
           </Link>
 
           {/* ── DESKTOP NAV ── */}
-          <div className="nb-desktop" style={{ position: "relative" }}>
+          <div className="nb-desktop" style={{ position: "relative", marginLeft: "24px" }}>
             {NAV_LINKS.map((item) => (
               <Link key={item.label} href={item.href} style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,

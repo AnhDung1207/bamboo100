@@ -149,7 +149,7 @@ export default function ServicesCarousel() {
 
   return (
     <section
-      style={{ background: "#fff", padding: "56px 0 40px", overflow: "hidden" }}
+      style={{ background: "#fff", padding: "72px 0", overflow: "hidden" }}
       onMouseEnter={stopTimer}
       onMouseLeave={startTimer}
     >

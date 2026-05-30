@@ -38,9 +38,9 @@ const PRODUCTS = [
     desc: "Dầu WTI, Dầu Brent, Khí tự nhiên và xăng pha chế từ NYMEX và ICE EU.",
     href: "/san-pham/nang-luong",
     thumbs: [
-      { src: "/products/nangluong/dau-tho.png", alt: "Dầu thô" },
-      { src: "/products/nangluong/khi-tu-nhien.png", alt: "Khí tự nhiên" },
-      { src: "/products/nangluong/xang.png", alt: "Xăng" },
+      { src: "/products/nangluong/dautho.png", alt: "Dầu thô" },
+      { src: "/products/nangluong/khitunhien.png", alt: "Khí tự nhiên" },
+      { src: "/products/nangluong/xang1.png", alt: "Xăng" },
     ],
   },
   {

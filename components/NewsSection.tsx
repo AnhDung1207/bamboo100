@@ -159,7 +159,11 @@ export default function NewsSection() {
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(3)
-      if (data) setArticles(data as Article[])
+      if (data) setArticles(data.map((item: any) => ({
+  ...item,
+  categories: Array.isArray(item.categories) ? item.categories[0] ?? null : item.categories,
+  product_groups: Array.isArray(item.product_groups) ? item.product_groups[0] ?? null : item.product_groups,
+})))
       setLoading(false)
     }
     fetchArticles()

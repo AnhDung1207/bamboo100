@@ -12,35 +12,51 @@ export default function HeroSection() {
         to   { opacity: 1; transform: translateY(0); }
       }
       @keyframes hs-entry-oil {
-        from { opacity: 0; transform: rotate(12deg) translateY(-10px) translateX(60px) scale(0.85); }
-        to   { opacity: 1; transform: rotate(12deg) translateY(-10px) translateX(0) scale(1); }
+        from { opacity: 0; transform: rotate(8deg) translateX(60px) scale(0.85); }
+        to   { opacity: 1; transform: rotate(8deg) translateX(0) scale(1); }
       }
       @keyframes hs-entry-cu {
-        from { opacity: 0; transform: rotate(-8deg) translateY(40px) scale(0.85); }
-        to   { opacity: 1; transform: rotate(-8deg) translateY(0) scale(1); }
+        from { opacity: 0; transform: rotate(-6deg) translateY(40px) scale(0.85); }
+        to   { opacity: 1; transform: rotate(-6deg) translateY(0) scale(1); }
+      }
+      @keyframes hs-entry-wheat {
+        from { opacity: 0; transform: rotate(5deg) translateY(-30px) scale(0.85); }
+        to   { opacity: 1; transform: rotate(5deg) translateY(0) scale(1); }
+      }
+      @keyframes hs-entry-pt {
+        from { opacity: 0; transform: rotate(-7deg) translateX(-40px) scale(0.85); }
+        to   { opacity: 1; transform: rotate(-7deg) translateX(0) scale(1); }
       }
       @keyframes hs-entry-ag {
-        from { opacity: 0; transform: rotate(6deg) translateY(10px) translateX(40px) scale(0.85); }
-        to   { opacity: 1; transform: rotate(6deg) translateY(10px) translateX(0) scale(1); }
+        from { opacity: 0; transform: rotate(4deg) translateY(30px) scale(0.85); }
+        to   { opacity: 1; transform: rotate(4deg) translateY(0) scale(1); }
       }
       @keyframes hs-float-oil {
-        0%, 100% { transform: rotate(12deg) translateY(-10px) translateX(0); }
-        50%       { transform: rotate(12deg) translateY(-26px) translateX(0); }
+        0%, 100% { transform: rotate(8deg) translateY(0px); }
+        50%       { transform: rotate(8deg) translateY(-20px); }
       }
       @keyframes hs-float-cu {
-        0%, 100% { transform: rotate(-8deg) translateY(0px); }
-        50%       { transform: rotate(-8deg) translateY(-18px); }
+        0%, 100% { transform: rotate(-6deg) translateY(0px); }
+        50%       { transform: rotate(-6deg) translateY(-18px); }
+      }
+      @keyframes hs-float-wheat {
+        0%, 100% { transform: rotate(5deg) translateY(0px); }
+        50%       { transform: rotate(5deg) translateY(-14px); }
+      }
+      @keyframes hs-float-pt {
+        0%, 100% { transform: rotate(-7deg) translateY(0px); }
+        50%       { transform: rotate(-7deg) translateY(-12px); }
       }
       @keyframes hs-float-ag {
-        0%, 100% { transform: rotate(6deg) translateY(10px) translateX(0); }
-        50%       { transform: rotate(6deg) translateY(-4px) translateX(0); }
+        0%, 100% { transform: rotate(4deg) translateY(0px); }
+        50%       { transform: rotate(4deg) translateY(-16px); }
       }
 
-      .hs-badges  { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
-      .hs-title   { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
-      .hs-desc    { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
-      .hs-cta     { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
-      .hs-stats   { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.45s both; }
+      .hs-badges { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+      .hs-title  { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.15s both; }
+      .hs-desc   { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+      .hs-cta    { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.35s both; }
+      .hs-stats  { animation: hs-fade-up 0.55s cubic-bezier(0.22,1,0.36,1) 0.45s both; }
 
       .hs-icon-oil {
         animation:
@@ -52,10 +68,74 @@ export default function HeroSection() {
           hs-entry-cu 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.5s both,
           hs-float-cu 4.0s ease-in-out 1.2s infinite;
       }
+      .hs-icon-wheat {
+        animation:
+          hs-entry-wheat 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.7s both,
+          hs-float-wheat 3.8s ease-in-out 1.4s infinite;
+      }
+      .hs-icon-pt {
+        animation:
+          hs-entry-pt 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.9s both,
+          hs-float-pt 4.2s ease-in-out 1.6s infinite;
+      }
       .hs-icon-ag {
         animation:
-          hs-entry-ag 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.7s both,
-          hs-float-ag 3.2s ease-in-out 1.4s infinite;
+          hs-entry-ag 0.7s cubic-bezier(0.34,1.56,0.64,1) 1.1s both,
+          hs-float-ag 3.2s ease-in-out 1.8s infinite;
+      }
+
+      /* ── TABLET ── */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .hero-wrap {
+          padding: 60px 40px !important;
+        }
+        .hero-visual {
+          height: 340px !important;
+        }
+        .hs-title {
+          font-size: clamp(28px, 3.5vw, 40px) !important;
+        }
+        .hs-desc {
+          font-size: 14px !important;
+        }
+      }
+
+      /* ── MOBILE ── */
+      @media (max-width: 768px) {
+        .hero-wrap {
+          grid-template-columns: 1fr !important;
+          padding: 48px 20px 32px !important;
+          min-height: auto !important;
+          gap: 32px !important;
+        }
+        .hero-visual {
+          height: 160px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 24px !important;
+        }
+        .hero-hide-mobile {
+          display: none !important;
+        }
+        /* Reset absolute positioning on mobile for Cu and Oil */
+        .hs-icon-cu-wrap {
+          position: static !important;
+          width: 110px !important;
+          height: 110px !important;
+          border-radius: 22px !important;
+        }
+        .hs-icon-oil-wrap {
+          position: static !important;
+          width: 100px !important;
+          height: 100px !important;
+          border-radius: 20px !important;
+        }
+        .hs-badges { gap: 6px !important; margin-bottom: 20px !important; }
+        .hs-title { font-size: 32px !important; margin-bottom: 14px !important; }
+        .hs-desc  { font-size: 14px !important; margin-bottom: 24px !important; }
+        .hs-cta   { gap: 10px !important; }
+        .hs-stats { gap: 20px !important; margin-top: 28px !important; padding-top: 20px !important; }
       }
     `
     if (!document.getElementById("hero-keyframes")) {
@@ -69,6 +149,7 @@ export default function HeroSection() {
 
   return (
     <div
+      className="hero-wrap"
       style={{
         background: "#f0f2f5",
         minHeight: "560px",
@@ -80,13 +161,12 @@ export default function HeroSection() {
         overflow: "hidden",
       }}
     >
+      {/* Top gradient for navbar */}
       <div style={{
-        position: "absolute",
-        top: 0, left: 0, right: 0,
+        position: "absolute", top: 0, left: 0, right: 0,
         height: "120px",
         background: "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 100%)",
-        pointerEvents: "none",
-        zIndex: 1,
+        pointerEvents: "none", zIndex: 1,
       }} />
 
       {/* LEFT */}
@@ -142,60 +222,96 @@ export default function HeroSection() {
       </div>
 
       {/* RIGHT */}
-      <div style={{ position: "relative", height: "460px", zIndex: 2 }}>
+      <div className="hero-visual" style={{ position: "relative", height: "480px", zIndex: 2 }}>
 
-        {/* Dầu */}
-        <div className="hs-icon-oil" style={{
-          position: "absolute", top: "0px", right: "0px",
-          width: "220px", height: "220px", borderRadius: "44px",
+        {/* Dầu — hiện trên mobile */}
+        <div className="hs-icon-oil-wrap hs-icon-oil" style={{
+          position: "absolute", top: "0px", right: "10px",
+          width: "200px", height: "200px", borderRadius: "40px",
           background: "linear-gradient(145deg, #2a2a2a 0%, #111 60%, #0a0a0a 100%)",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.45), inset 0 2px 6px rgba(255,255,255,0.1)",
+          boxShadow: "0 28px 70px rgba(0,0,0,0.4), inset 0 2px 6px rgba(255,255,255,0.1)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <svg width="96" height="96" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z" fill="rgba(220,220,220,0.92)" />
-            <path d="M12 6c-2 0-4 2-4 4 0 2.5 4 7 4 7s4-4.5 4-7c0-2-2-4-4-4z" fill="rgba(160,160,160,0.65)" />
+          <svg width="88" height="88" viewBox="0 0 488.162 488.162" fill="none">
+            <path d="M440.443,91.682c0-26.385-21.468-47.853-47.853-47.853h-35.205h-109.24V24.386c0-13.469-9.039-24.386-20.2-24.386h-86.082c-11.152,0-20.2,10.917-20.2,24.386v19.452H95.572c-26.385,0-47.853,21.468-47.853,47.853c0,19.265,11.445,35.904,27.889,43.488v31.555c-16.444,7.584-27.889,24.223-27.889,43.488s11.445,35.904,27.889,43.488v31.555c-16.444,7.576-27.889,24.223-27.889,43.488s11.445,35.904,27.889,43.488v24.581c-16.444,7.584-27.889,24.223-27.889,43.488c0,26.385,21.468,47.853,47.853,47.853H392.59c26.385,0,47.853-21.468,47.853-47.853c0-19.265-11.445-35.904-27.889-43.488V372.24c16.444-7.584,27.889-24.223,27.889-43.488s-11.445-35.904-27.889-43.488v-31.555c16.444-7.584,27.889-24.223,27.889-43.488s-11.445-35.904-27.889-43.488V135.17C428.998,127.594,440.443,110.955,440.443,91.682z" fill="rgba(220,220,220,0.85)"/>
+            <path d="M244.081,120.815c0,0-8.665,12.339-20.598,31.88c-45.78,74.937-139.836,256.066,20.598,256.066c185.015,0,31.588-240.882,4.064-281.98C245.576,122.953,244.081,120.815,244.081,120.815z" fill="rgba(255,255,255,0.6)"/>
+            <path d="M255.038,357.47c21.76-10.047,25.231-30.572,19.891-52.316c-4.519-18.419,23.833-26.231,28.361-7.82c8.25,33.595,0.35,69.946-33.408,85.529C252.786,390.749,237.838,365.412,255.038,357.47z" fill="rgba(255,255,255,0.4)"/>
           </svg>
         </div>
 
-        {/* Cu */}
-        <div className="hs-icon-cu" style={{
-          position: "absolute", top: "140px", left: "20px",
-          width: "200px", height: "200px", borderRadius: "40px",
+        {/* Cu — hiện trên mobile */}
+        <div className="hs-icon-cu-wrap hs-icon-cu" style={{
+          position: "absolute", top: "80px", left: "0px",
+          width: "185px", height: "185px", borderRadius: "36px",
           background: "linear-gradient(145deg, #d4904e 0%, #b8722a 40%, #8b4513 100%)",
-          boxShadow: "0 28px 70px rgba(139,69,19,0.3), inset 0 3px 6px rgba(255,255,255,0.28)",
+          boxShadow: "0 24px 60px rgba(139,69,19,0.28), inset 0 3px 6px rgba(255,255,255,0.28)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <span style={{
-            fontSize: "88px", fontWeight: 900, color: "rgba(70,25,0,0.4)",
+            fontSize: "80px", fontWeight: 900, color: "rgba(70,25,0,0.4)",
             fontFamily: "Georgia, serif", letterSpacing: "-6px",
           }}>Cu</span>
         </div>
 
-        {/* Ag */}
-        <div className="hs-icon-ag" style={{
-          position: "absolute", bottom: "30px", right: "20px",
-          width: "155px", height: "155px", borderRadius: "30px",
-          background: "linear-gradient(145deg, #ececec 0%, #c8c8c8 50%, #a8a8a8 100%)",
-          boxShadow: "0 20px 50px rgba(130,130,130,0.25), inset 0 2px 5px rgba(255,255,255,0.6)",
+        {/* Lúa mì — ẩn mobile */}
+        <div className="hero-hide-mobile hs-icon-wheat" style={{
+          position: "absolute", top: "200px", right: "240px",
+          width: "130px", height: "130px", borderRadius: "26px",
+          background: "linear-gradient(145deg, #fef3c7 0%, #fde68a 50%, #f59e0b 100%)",
+          boxShadow: "0 16px 40px rgba(180,140,0,0.2), inset 0 2px 4px rgba(255,255,255,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="58" height="58" viewBox="0 0 512 512" fill="none">
+            <path d="M267.798,145.49l-11.793,16.64l-11.981-16.64c-18.415-25.779-18.415-60.399,0-86.178l11.981-16.649l11.793,16.649C286.213,85.091,286.213,119.711,267.798,145.49" fill="rgba(80,40,0,0.7)"/>
+            <path d="M252.562,210.294l3.43,20.105l-20.241-3.294c-31.249-5.205-55.731-29.687-60.937-60.937l-3.294-20.241l20.105,3.43C222.866,154.563,247.357,179.045,252.562,210.294" fill="rgba(80,40,0,0.6)"/>
+            <path d="M252.562,304.16l3.43,20.105l-20.241-3.294c-31.249-5.205-55.731-29.687-60.937-60.937l-3.294-20.241l20.105,3.43C222.866,248.429,247.357,272.911,252.562,304.16" fill="rgba(80,40,0,0.6)"/>
+            <path d="M252.562,398.027l3.43,20.105l-20.241-3.294c-31.249-5.205-55.731-29.687-60.937-60.937l-3.294-20.241l20.105,3.43C222.866,342.296,247.357,366.778,252.562,398.027" fill="rgba(80,40,0,0.6)"/>
+            <path d="M259.438,210.294l-3.43,20.105l20.241-3.294c31.249-5.205,55.731-29.687,60.937-60.937l3.294-20.241l-20.105,3.43C289.134,154.563,264.643,179.045,259.438,210.294" fill="rgba(80,40,0,0.6)"/>
+            <path d="M259.438,304.16l-3.43,20.105l20.241-3.294c31.249-5.205,55.731-29.687,60.937-60.937l3.294-20.241l-20.105,3.43C289.134,248.429,264.643,272.911,259.438,304.16" fill="rgba(80,40,0,0.6)"/>
+            <path d="M259.438,398.027l-3.43,20.105l20.241-3.294c31.249-5.205,55.731-29.687,60.937-60.937l3.294-20.241l-20.105,3.43C289.134,342.296,264.643,366.778,259.438,398.027" fill="rgba(80,40,0,0.6)"/>
+            <path d="M256.006,51.2c-4.71,0-8.533-3.814-8.533-8.533l-0.009-34.133c0-4.71,3.814-8.533,8.525-8.533h0.009c4.71,0,8.533,3.814,8.533,8.533l0.009,34.133C264.54,47.377,260.725,51.2,256.006,51.2z" fill="rgba(80,40,0,0.5)"/>
+            <path d="M256.006,512c-4.71,0-8.533-3.823-8.533-8.533v-51.2c0-4.71,3.823-8.533,8.533-8.533c4.71,0,8.533,3.823,8.533,8.533v51.2C264.54,508.177,260.717,512,256.006,512" fill="rgba(80,40,0,0.5)"/>
+          </svg>
+        </div>
+
+        {/* Pt — ẩn mobile */}
+        <div className="hero-hide-mobile hs-icon-pt" style={{
+          position: "absolute", bottom: "40px", left: "60px",
+          width: "120px", height: "120px", borderRadius: "24px",
+          background: "linear-gradient(145deg, #e8e8f0 0%, #c8c8d8 50%, #a0a0b8 100%)",
+          boxShadow: "0 14px 36px rgba(100,100,140,0.2), inset 0 2px 4px rgba(255,255,255,0.7)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
           <span style={{
-            fontSize: "68px", fontWeight: 900, color: "rgba(80,80,80,0.45)",
+            fontSize: "50px", fontWeight: 900, color: "rgba(60,60,90,0.45)",
+            fontFamily: "Georgia, serif", letterSpacing: "-2px",
+          }}>Pt</span>
+        </div>
+
+        {/* Ag — ẩn mobile */}
+        <div className="hero-hide-mobile hs-icon-ag" style={{
+          position: "absolute", bottom: "20px", right: "20px",
+          width: "145px", height: "145px", borderRadius: "28px",
+          background: "linear-gradient(145deg, #ececec 0%, #c8c8c8 50%, #a8a8a8 100%)",
+          boxShadow: "0 18px 46px rgba(130,130,130,0.22), inset 0 2px 5px rgba(255,255,255,0.6)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <span style={{
+            fontSize: "62px", fontWeight: 900, color: "rgba(80,80,80,0.45)",
             fontFamily: "Georgia, serif",
           }}>Ag</span>
         </div>
 
         {/* Decorative blur */}
         <div style={{
-          position: "absolute", top: "15%", left: "25%",
-          width: "280px", height: "280px", borderRadius: "50%",
+          position: "absolute", top: "20%", left: "20%",
+          width: "260px", height: "260px", borderRadius: "50%",
           background: "rgba(0,195,137,0.07)", filter: "blur(60px)", pointerEvents: "none",
         }} />
         <div style={{
-          position: "absolute", bottom: "5%", right: "5%",
-          width: "180px", height: "180px", borderRadius: "50%",
-          background: "rgba(200,120,65,0.09)", filter: "blur(40px)", pointerEvents: "none",
+          position: "absolute", bottom: "10%", right: "10%",
+          width: "160px", height: "160px", borderRadius: "50%",
+          background: "rgba(200,120,65,0.08)", filter: "blur(40px)", pointerEvents: "none",
         }} />
       </div>
     </div>

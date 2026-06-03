@@ -193,7 +193,10 @@ export default function SuaBaiViet() {
   const cardStyle = { background: "#fff", borderRadius: "12px", border: "0.5px solid #e2e8f0", padding: "16px" }
 
   const SidebarContent = () => (
-    <>
+  <>
+    {console.log("productGroups:", productGroups)}
+    {console.log("form.group_id:", form.group_id)}
+
       {/* Loại bài — chỉ hiển thị, không cho đổi khi sửa */}
       <div style={cardStyle}>
         <h3 style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "12px" }}>Loại bài viết</h3>

@@ -30,7 +30,8 @@ export default function DangKyPage() {
     setError("")
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -38,11 +39,14 @@ export default function DangKyPage() {
       },
     })
 
+    if (data?.user && data.user.identities?.length === 0) {
+      setError("Email này đã được đăng ký")
+      setLoading(false)
+      return
+    }
+
     if (error) {
-      setError(error.message === "User already registered"
-        ? "Email này đã được đăng ký"
-        : "Đã có lỗi xảy ra, vui lòng thử lại"
-      )
+      setError("Đã có lỗi xảy ra, vui lòng thử lại")
       setLoading(false)
       return
     }
@@ -105,8 +109,6 @@ export default function DangKyPage() {
       padding: "20px",
     }}>
       <div style={{ width: "100%", maxWidth: "420px" }}>
-
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
           <Link href="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "10px" }}>
             <img src="/o.png" alt="BAMBOO100" style={{ width: "40px", height: "40px", borderRadius: "10px" }} />
@@ -119,12 +121,7 @@ export default function DangKyPage() {
           </p>
         </div>
 
-        {/* Card */}
-        <div style={{
-          background: "#fff",
-          borderRadius: "16px",
-          padding: "32px",
-        }}>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "32px" }}>
           <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0A1628", marginBottom: "24px" }}>
             Đăng ký
           </h1>
@@ -198,12 +195,7 @@ export default function DangKyPage() {
             {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản →"}
           </button>
 
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            margin: "20px 0",
-          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
             <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />
             <span style={{ fontSize: "12px", color: "#94a3b8" }}>hoặc</span>
             <div style={{ flex: 1, height: "1px", background: "#e2e8f0" }} />

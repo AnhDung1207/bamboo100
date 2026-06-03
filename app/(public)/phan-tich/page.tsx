@@ -56,7 +56,7 @@ export default async function PhanTichPage({
     }
   }
 
-  const { data: articles } = await query
+  const { data: articles, error } = await query
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", minHeight: "100vh", background: "#fff" }}>

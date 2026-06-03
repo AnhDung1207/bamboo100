@@ -70,7 +70,7 @@ export default async function KienThucDetailPage({
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  const { data: article } = await supabase
+  const { data: article, error: articleError } = await supabase
     .from("knowledge_articles")
     .select("*, knowledge_categories(id, name, slug)")
     .eq("slug", slug)

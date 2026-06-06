@@ -39,21 +39,98 @@ const MONTH_FULL: Record<string, string> = {
   "09": "September", "10": "October", "11": "November", "12": "December",
 }
 
+// Responsive style helper – returns inline style merged with media-query-like
+// overrides via CSS custom properties. Since Next.js inline styles can't do
+// media queries we inject a <style> tag once and use CSS classes.
+const GLOBAL_CSS = `
+  .td-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .td-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .td-stat-value { font-size: 24px; }
+  .td-h1 { font-size: 26px; }
+  .td-calendar-cell { min-height: 64px; padding: 6px; }
+  .td-calendar-pnl { font-size: 11px; }
+  .td-calendar-wl  { font-size: 10px; }
+  .td-month-scroll {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .td-container { padding: 32px 24px 64px; }
+  .td-header { margin-bottom: 28px; }
+
+  @media (max-width: 768px) {
+    .td-grid-3 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .td-grid-2 {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .td-stat-value { font-size: 20px; }
+    .td-h1 { font-size: 20px; }
+    .td-calendar-cell { min-height: 52px; padding: 4px; }
+    .td-calendar-pnl { font-size: 10px; }
+    .td-calendar-wl  { font-size: 9px; }
+    .td-month-scroll {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .td-month-scroll::-webkit-scrollbar { display: none; }
+    .td-month-btn { white-space: nowrap; flex-shrink: 0; }
+    .td-container { padding: 20px 16px 48px; }
+    .td-header { margin-bottom: 20px; }
+    .td-card { padding: 16px !important; }
+    .td-card-label { font-size: 10px !important; }
+  }
+
+  @media (max-width: 480px) {
+    .td-grid-3 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .td-stat-value { font-size: 18px; }
+    .td-calendar-cell { min-height: 44px; padding: 3px; }
+    .td-calendar-day { font-size: 10px !important; }
+    .td-calendar-pnl { font-size: 9px; }
+    .td-calendar-wl  { display: none; }
+  }
+`
+
+function GlobalStyle() {
+  return <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
+}
+
 function StatCard({ label, value, sub, color = "#00A67E" }: {
   label: string; value: string; sub?: string; color?: string
 }) {
   return (
-    <div style={{
+    <div className="td-card" style={{
       background: "#fff",
       border: "1px solid #e8ecf0",
       borderRadius: "14px",
       padding: "20px 24px",
       boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
     }}>
-      <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "8px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+      <div className="td-card-label" style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "8px", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>
         {label}
       </div>
-      <div style={{ fontSize: "24px", fontWeight: 800, color, lineHeight: 1.2 }}>
+      <div className="td-stat-value" style={{ fontWeight: 800, color, lineHeight: 1.2 }}>
         {value}
       </div>
       {sub && <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>{sub}</div>}
@@ -62,7 +139,6 @@ function StatCard({ label, value, sub, color = "#00A67E" }: {
 }
 
 function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selectedMonth: string }) {
-  // Build daily map
   const dailyMap = useMemo(() => {
     const map: Record<string, { pnl: number; wins: number; losses: number }> = {}
     trades.forEach(t => {
@@ -75,7 +151,6 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
     return map
   }, [trades])
 
-  // Determine which month to show
   const now = new Date()
   let year: number, month: number
 
@@ -84,7 +159,6 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
     year = parseInt(y)
     month = parseInt(m)
   } else {
-    // Show most recent month with data
     const dates = Object.keys(dailyMap).sort()
     if (dates.length > 0) {
       const last = dates[dates.length - 1]
@@ -98,15 +172,14 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
 
   const monthStr = String(month).padStart(2, "0")
   const daysInMonth = new Date(year, month, 0).getDate()
-  const firstDayOfWeek = new Date(year, month - 1, 1).getDay() // 0=Sun
-  // Convert to Mon-first
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay()
   const startOffset = (firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1)
 
   const days = []
   for (let i = 0; i < startOffset; i++) days.push(null)
   for (let d = 1; d <= daysInMonth; d++) days.push(d)
 
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const weekDays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 
   return (
     <div>
@@ -117,7 +190,7 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
       </div>
 
       {/* Weekday headers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginBottom: "4px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px", marginBottom: "3px" }}>
         {weekDays.map(d => (
           <div key={d} style={{ textAlign: "center", fontSize: "11px", fontWeight: 600, color: "#94a3b8", padding: "4px 0" }}>
             {d}
@@ -126,7 +199,7 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
       </div>
 
       {/* Calendar grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px" }}>
         {days.map((day, i) => {
           if (!day) return <div key={`empty-${i}`} />
           const dateStr = `${year}-${monthStr}-${String(day).padStart(2, "0")}`
@@ -134,34 +207,28 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
           const isWeekend = ((i % 7) >= 5)
 
           return (
-            <div key={dateStr} style={{
-              borderRadius: "8px",
-              padding: "6px",
-              minHeight: "64px",
+            <div key={dateStr} className="td-calendar-cell" style={{
+              borderRadius: "6px",
               background: data
-                ? data.pnl >= 0
-                  ? "rgba(0,166,126,0.08)"
-                  : "rgba(239,68,68,0.07)"
+                ? data.pnl >= 0 ? "rgba(0,166,126,0.08)" : "rgba(239,68,68,0.07)"
                 : isWeekend ? "#f8fafc" : "#fff",
               border: data
-                ? data.pnl >= 0
-                  ? "1px solid rgba(0,166,126,0.2)"
-                  : "1px solid rgba(239,68,68,0.2)"
+                ? data.pnl >= 0 ? "1px solid rgba(0,166,126,0.2)" : "1px solid rgba(239,68,68,0.2)"
                 : "1px solid #f1f5f9",
             }}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: data ? "#374151" : "#cbd5e1", marginBottom: "2px" }}>
+              <div className="td-calendar-day" style={{ fontSize: "11px", fontWeight: 600, color: data ? "#374151" : "#cbd5e1", marginBottom: "2px" }}>
                 {day}
               </div>
               {data && (
                 <>
-                  <div style={{
-                    fontSize: "11px", fontWeight: 700,
+                  <div className="td-calendar-pnl" style={{
+                    fontWeight: 700,
                     color: data.pnl >= 0 ? "#00A67E" : "#ef4444",
                     lineHeight: 1.2,
                   }}>
                     {data.pnl >= 0 ? "+" : ""}{Math.round(data.pnl).toLocaleString()}
                   </div>
-                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>
+                  <div className="td-calendar-wl" style={{ color: "#94a3b8", marginTop: "2px" }}>
                     {data.wins > 0 && `${data.wins}W`}{data.wins > 0 && data.losses > 0 && "-"}{data.losses > 0 && `${data.losses}L`}
                     {data.wins + data.losses > 0 && (
                       <span style={{ marginLeft: "2px" }}>
@@ -248,10 +315,34 @@ export default function TradingDashboard({ trades }: Props) {
     }
   }, [filteredTrades])
 
+  const MonthFilterRow = () => (
+    <div className="td-month-scroll">
+      <button
+        className="td-month-btn"
+        onClick={() => setSelectedMonth("all")}
+        style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b", transition: "all 0.15s" }}>
+        Tất cả
+      </button>
+      {availableMonths.map(m => {
+        const [year, month] = m.split("-")
+        return (
+          <button
+            key={m}
+            className="td-month-btn"
+            onClick={() => setSelectedMonth(m)}
+            style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === m ? "#00A67E" : "#fff", borderColor: selectedMonth === m ? "#00A67E" : "#e2e8f0", color: selectedMonth === m ? "#fff" : "#64748b", transition: "all 0.15s" }}>
+            {MONTH_NAMES[month]} {year}
+          </button>
+        )
+      })}
+    </div>
+  )
+
   if (!stats) return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px" }}>
-        <MonthFilter availableMonths={availableMonths} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} />
+      <GlobalStyle />
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }} className="td-container">
+        <MonthFilterRow />
         <div style={{ textAlign: "center", padding: "80px 40px" }}>
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>📊</div>
           <p style={{ color: "#94a3b8" }}>Không có dữ liệu cho tháng này</p>
@@ -276,63 +367,52 @@ export default function TradingDashboard({ trades }: Props) {
 
   return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px 64px" }}>
+      <GlobalStyle />
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }} className="td-container">
 
         {/* Header */}
-        <div style={{ marginBottom: "28px" }}>
+        <div className="td-header">
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(0,166,126,0.08)", border: "1px solid rgba(0,166,126,0.2)", borderRadius: "20px", padding: "4px 14px", marginBottom: "12px" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00A67E", display: "inline-block" }} />
             <span style={{ fontSize: "11px", fontWeight: 600, color: "#00A67E", letterSpacing: "0.08em" }}>LIVE TRADING HISTORY</span>
           </div>
-          <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>
+          <h1 className="td-h1" style={{ fontWeight: 800, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>
             Hiệu suất giao dịch thực tế
           </h1>
           <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
             {stats.total} lệnh đã đóng · Dữ liệu cập nhật liên tục
           </p>
 
-          {/* Month filter */}
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "16px" }}>
-            <button onClick={() => setSelectedMonth("all")} style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b", transition: "all 0.15s" }}>
-              Tất cả
-            </button>
-            {availableMonths.map(m => {
-              const [year, month] = m.split("-")
-              return (
-                <button key={m} onClick={() => setSelectedMonth(m)} style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === m ? "#00A67E" : "#fff", borderColor: selectedMonth === m ? "#00A67E" : "#e2e8f0", color: selectedMonth === m ? "#fff" : "#64748b", transition: "all 0.15s" }}>
-                  {MONTH_NAMES[month]} {year}
-                </button>
-              )
-            })}
-          </div>
+          {/* Month filter — horizontal scroll on mobile */}
+          <MonthFilterRow />
         </div>
 
         {/* Metric cards row 1 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "12px" }}>
+        <div className="td-grid-3">
           <StatCard label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" />
-          <StatCard label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins} Win / ${stats.losses} Loss`} color="#00A67E" />
-          <StatCard label="AVERAGE R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ trung bình" color="#3b82f6" />
+          <StatCard label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins}W / ${stats.losses}L`} color="#00A67E" />
+          <StatCard label="AVG R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ TB" color="#3b82f6" />
         </div>
 
         {/* Metric cards row 2 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "12px" }}>
+        <div className="td-grid-3">
           <StatCard label="PROFIT FACTOR" value={stats.profitFactor.toFixed(2)} sub="Tổng lãi / tổng lỗ" color="#f59e0b" />
-          <StatCard label="EXPECTED VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng mỗi lệnh" color="#8b5cf6" />
-          <StatCard label="AVG HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Thời gian giữ lệnh TB" color="#0f172a" />
+          <StatCard label="EXP. VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng / lệnh" color="#8b5cf6" />
+          <StatCard label="HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Giữ lệnh TB" color="#0f172a" />
         </div>
 
         {/* Metric cards row 3 */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "20px" }}>
+        <div className="td-grid-3">
           <StatCard label="TOTAL FEES" value={`$${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Tổng phí giao dịch" color="#ef4444" />
           <StatCard label="MAX DRAWDOWN" value={`-$${stats.maxDrawdown.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức giảm tối đa" color="#ef4444" />
           <StatCard label="MAX RUNUP" value={`+$${stats.maxRunup.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức tăng tối đa" color="#00A67E" />
         </div>
 
-        {/* Charts row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+        {/* Charts row — stacks to 1 col on mobile */}
+        <div className="td-grid-2">
 
           {/* Equity Curve */}
-          <div style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div className="td-card" style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <div style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Equity Curve</div>
             <div style={{ fontSize: "12px", color: "#cbd5e1", marginBottom: "12px" }}>{stats.equityCurve[0]?.date} → {stats.equityCurve[stats.equityCurve.length - 1]?.date}</div>
             <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: "100%", height: "auto" }}>
@@ -352,7 +432,7 @@ export default function TradingDashboard({ trades }: Props) {
           </div>
 
           {/* Daily PNL */}
-          <div style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div className="td-card" style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <div style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Daily PNL</div>
             <div style={{ fontSize: "12px", color: "#cbd5e1", marginBottom: "12px" }}>{stats.dailyPnl.length} ngày gần nhất</div>
             <svg viewBox={`0 0 ${barW} ${barH}`} style={{ width: "100%", height: "auto" }}>
@@ -372,17 +452,17 @@ export default function TradingDashboard({ trades }: Props) {
         </div>
 
         {/* Performance Calendar */}
-        <div style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginBottom: "24px" }}>
+        <div className="td-card" style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", marginBottom: "24px" }}>
           <div style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", marginBottom: "16px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Performance Calendar</div>
           <PerformanceCalendar trades={filteredTrades} selectedMonth={selectedMonth} />
         </div>
 
         {/* CTA */}
-        <div style={{ textAlign: "center", padding: "32px", background: "rgba(0,166,126,0.05)", border: "1px solid rgba(0,166,126,0.15)", borderRadius: "16px" }}>
+        <div style={{ textAlign: "center", padding: "28px 20px", background: "rgba(0,166,126,0.05)", border: "1px solid rgba(0,166,126,0.15)", borderRadius: "16px" }}>
           <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "8px" }}>
             Đây là kết quả giao dịch thực tế — không chỉnh sửa, không chọn lọc
           </p>
-          <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginBottom: "16px" }}>
+          <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "16px" }}>
             Bắt đầu đầu tư cùng BAMBOO100
           </h3>
           <Link href="/lien-he" style={{ display: "inline-block", background: "#00A67E", color: "#fff", fontSize: "14px", fontWeight: 700, padding: "12px 28px", borderRadius: "8px", textDecoration: "none" }}>
@@ -391,18 +471,6 @@ export default function TradingDashboard({ trades }: Props) {
         </div>
 
       </div>
-    </div>
-  )
-}
-
-function MonthFilter({ availableMonths, selectedMonth, setSelectedMonth }: { availableMonths: string[], selectedMonth: string, setSelectedMonth: (m: string) => void }) {
-  return (
-    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "24px" }}>
-      <button onClick={() => setSelectedMonth("all")} style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b" }}>Tất cả</button>
-      {availableMonths.map(m => {
-        const [year, month] = m.split("-")
-        return <button key={m} onClick={() => setSelectedMonth(m)} style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === m ? "#00A67E" : "#fff", borderColor: selectedMonth === m ? "#00A67E" : "#e2e8f0", color: selectedMonth === m ? "#fff" : "#64748b" }}>{MONTH_NAMES[month]} {year}</button>
-      })}
     </div>
   )
 }

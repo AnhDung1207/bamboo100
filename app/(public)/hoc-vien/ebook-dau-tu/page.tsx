@@ -380,17 +380,9 @@ export default function EbookDauTuPage() {
       <div className="ebook-hero" style={{
         background: "linear-gradient(180deg, #f0fdf8 0%, #fff 100%)",
         borderBottom: "1px solid #e2e8f0",
-        padding: "72px 80px 56px",
+        padding: "120px 80px 56px",
         textAlign: "center",
       }}>
-        <div style={{
-          display: "inline-block", fontSize: "10px", fontWeight: 700,
-          letterSpacing: "2.5px", textTransform: "uppercase",
-          color: "#00C389", background: "rgba(0,195,137,0.08)",
-          padding: "6px 16px", borderRadius: "20px",
-          marginBottom: "20px", border: "1px solid rgba(0,195,137,0.2)",
-        }}>
-        </div>
         <h1 style={{
           fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700,
           color: "#0A1628", lineHeight: 1.15, letterSpacing: "-1.5px",
@@ -436,43 +428,6 @@ export default function EbookDauTuPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* CTA BOTTOM */}
-      <div className="ebook-cta-section" style={{
-        background: "linear-gradient(135deg, #0A1628 0%, #0D1F38 100%)",
-        padding: "64px 80px",
-        textAlign: "center",
-      }}>
-        <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "#00C389", marginBottom: "16px" }}>
-          Bắt đầu ngay hôm nay
-        </p>
-        <h2 style={{ fontSize: "34px", fontWeight: 700, color: "#fff", lineHeight: 1.25, letterSpacing: "-0.5px", marginBottom: "14px" }}>
-          Sẵn sàng nâng cao kiến thức?
-        </h2>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", maxWidth: "460px", margin: "0 auto 32px", lineHeight: 1.7 }}>
-          Mở tài khoản để truy cập toàn bộ thư viện ebook và nhận tư vấn chiến lược 1-1 từ chuyên gia Bamboo100.
-        </p>
-        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/lien-he#dat-lich" style={{
-            background: "#00C389", color: "#fff",
-            fontSize: "13px", fontWeight: 700,
-            padding: "14px 28px", borderRadius: "8px",
-            textDecoration: "none", letterSpacing: "0.5px",
-            boxShadow: "0 4px 20px rgba(0,195,137,0.35)",
-          }}>
-            Mở tài khoản miễn phí →
-          </Link>
-          <Link href="/hoc-vien/khoa-hoc" style={{
-            background: "rgba(255,255,255,0.07)", color: "#fff",
-            fontSize: "13px", fontWeight: 500,
-            padding: "14px 28px", borderRadius: "8px",
-            textDecoration: "none",
-            border: "1px solid rgba(255,255,255,0.15)",
-          }}>
-            Xem khóa học
-          </Link>
-        </div>
       </div>
 
     </div>

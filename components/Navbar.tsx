@@ -43,7 +43,7 @@ const HOC_VIEN_MENU = [
 export default function Navbar() {
   const router = useRouter()
   const pathname = usePathname()
-  const isDarkHero = pathname === "/" || pathname.startsWith("/phan-tich/") || pathname.startsWith("/hoc-vien/nen-tang-kien-thuc/")
+  const isDarkHero = pathname === "/" || pathname.startsWith("/phan-tich/") || pathname.startsWith("/hoc-vien/nen-tang-kien-thuc/") || pathname === "/gioi-thieu"
   const isHiddenRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin")
   const supabase = createClient()
 

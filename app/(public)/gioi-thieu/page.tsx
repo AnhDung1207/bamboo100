@@ -123,21 +123,15 @@ export default function VeChungToiPage() {
 
       {/* HERO */}
       <div className="hero-section" style={{
-        background: "linear-gradient(135deg, #0A1628 0%, #0D2040 100%)",
+        background: "linear-gradient(rgba(10,22,40,0.72), rgba(13,32,64,0.80)), url('/ve-chung-toi-hero.jpg') center bottom/cover no-repeat",
         position: "relative", overflow: "hidden",
+        paddingTop: "120px",
       }}>
         {/* decorative blobs */}
         <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "300px", height: "300px", borderRadius: "50%", background: "rgba(0,195,137,0.06)", filter: "blur(60px)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-60px", left: "-60px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(0,195,137,0.04)", filter: "blur(40px)", pointerEvents: "none" }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            background: "rgba(0,195,137,0.12)", border: "1px solid rgba(0,195,137,0.25)",
-            borderRadius: "20px", padding: "5px 14px", marginBottom: "20px",
-          }}>
-            <span style={{ fontSize: "11px", fontWeight: 600, color: "#00C389", letterSpacing: "0.08em" }}>VỀ CHÚNG TÔI</span>
-          </div>
           <h1 className="hero-title" style={{ fontWeight: 800, color: "#fff", lineHeight: 1.25, marginBottom: "16px" }}>
             Đồng hành cùng nhà đầu tư<br />
             <span style={{ color: "#00C389" }}>trên thị trường hàng hóa</span>
@@ -199,18 +193,18 @@ export default function VeChungToiPage() {
             <p style={{ fontSize: "15px", color: "#64748b", lineHeight: 1.8, marginBottom: "32px" }}>
               BAMBOO100 cung cấp phân tích cung - cầu thực tế, kịch bản thị trường rõ ràng và tư vấn chiến lược 1-1, giúp nhà đầu tư đưa ra quyết định tự tin hơn.
             </p>
-            <div style={{ background: "linear-gradient(135deg, #0A1628, #0D2040)", borderRadius: "16px", padding: "28px" }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(0,195,137,0.12)", borderRadius: "6px", padding: "4px 10px", marginBottom: "14px" }}>
-                <i className="ti ti-eye" style={{ fontSize: "14px", color: "#00C389" }} />
-                <span style={{ fontSize: "11px", fontWeight: 600, color: "#00C389", letterSpacing: "0.06em" }}>TẦM NHÌN</span>
-              </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: "10px" }}>
-                Trở thành nền tảng phân tích hàng hóa số 1 Đông Nam Á vào 2030
-              </h3>
-              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.55)", lineHeight: 1.8 }}>
-                Xây dựng cộng đồng nhà đầu tư hàng hóa chuyên nghiệp, am hiểu thị trường và có khả năng tự đưa ra quyết định đầu tư hiệu quả.
-              </p>
-            </div>
+            <div style={{ borderLeft: "4px solid #00C389", paddingLeft: "20px" }}>
+  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(0,195,137,0.08)", borderRadius: "6px", padding: "4px 10px", marginBottom: "14px" }}>
+    <i className="ti ti-eye" style={{ fontSize: "14px", color: "#00C389" }} />
+    <span style={{ fontSize: "11px", fontWeight: 600, color: "#00C389", letterSpacing: "0.06em" }}>TẦM NHÌN</span>
+  </div>
+  <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#0A1628", lineHeight: 1.4, marginBottom: "10px" }}>
+    Trở thành nền tảng phân tích hàng hóa số 1 Đông Nam Á vào 2030
+  </h3>
+  <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.8 }}>
+    Xây dựng cộng đồng nhà đầu tư hàng hóa chuyên nghiệp, am hiểu thị trường và có khả năng tự đưa ra quyết định đầu tư hiệu quả.
+  </p>
+</div>
           </div>
 
           {/* Phải: Timeline */}

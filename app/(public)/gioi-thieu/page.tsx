@@ -56,7 +56,7 @@ const TEAM = [
     initials: "AD" },
   { name: "Nguyễn Thành Nam", role: "Giám đốc Khối Đầu Tư", color: "#0ea5e9",
     desc: "Chuyên gia quản trị danh mục đầu tư thị trường Hàng hóa, Chứng khoán.", initials: "LA" },
-  { name: "Trần Thị Lan Anh", role: "Giám đốc Kinh Doanh", color: "#f97316",
+  { name: "Trần ....", role: "Giám đốc Kinh Doanh", color: "#f97316",
     desc: "Nhiều năm kinh nghiệm trong lĩnh vực tài chính, giữ vai trò then chốt trong việc xây dựng chiến lược phát triển thị trường và mở rộng hệ thống khách hàng.",
     initials: "HN" },
 ]

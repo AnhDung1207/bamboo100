@@ -51,13 +51,13 @@ const VALUES = [
 ]
 
 const TEAM = [
-  { name: "Nguyễn Anh Dũng", role: "CEO & Founder", color: "#00C389",
-    desc: "10+ năm kinh nghiệm giao dịch phái sinh hàng hóa tại các sàn quốc tế CME, ICE.",
+  { name: "Nguyễn Anh Dũng", role: "Giám đốc điều hành", color: "#00C389",
+    desc: "10+ năm kinh nghiệm trong lĩnh vực tài chính và đầu tư.",
     initials: "AD" },
-  { name: "Trần Thị Lan Anh", role: "Head of Research", color: "#0ea5e9",
-    desc: "Chuyên gia phân tích vĩ mô và cung-cầu hàng hóa.", initials: "LA" },
-  { name: "Lê Hoàng Nam", role: "Head of Education", color: "#f97316",
-    desc: "Đào tạo hơn 2,000 nhà đầu tư về giao dịch phái sinh hàng hóa trong 5 năm qua.",
+  { name: "Nguyễn Thành Nam", role: "Giám đốc Khối Đầu Tư", color: "#0ea5e9",
+    desc: "Chuyên gia quản trị danh mục đầu tư thị trường Hàng hóa, Chứng khoán.", initials: "LA" },
+  { name: "Trần Thị Lan Anh", role: "Giám đốc Kinh Doanh", color: "#f97316",
+    desc: "Nhiều năm kinh nghiệm trong lĩnh vực tài chính, giữ vai trò then chốt trong việc xây dựng chiến lược phát triển thị trường và mở rộng hệ thống khách hàng.",
     initials: "HN" },
 ]
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import PriceWidget from "@/components/PriceWidget"
 import Navbar from "@/components/Navbar"
+export const revalidate = 300 // cache 5 phút
 
 const CATEGORY_COLORS: Record<string, string> = {
   vang: "#EF9F27",

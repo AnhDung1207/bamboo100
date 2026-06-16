@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import ArticleFeed from "./ArticleFeed"
 import PriceWidget from "./PriceWidget"
 import Navbar from "@/components/Navbar"
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: "Phân tích thị trường | BAMBOO100",

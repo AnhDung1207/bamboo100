@@ -40,8 +40,15 @@ export default function DangNhapPage() {
       .eq("id", authData.user.id)
       .single()
 
-    // Bước 3: Redirect theo role
-    if (profile?.role === "admin") {
+    // Bước 3: Quay lại trang người dùng đang xem, nếu có.
+    const requestedRedirect = new URLSearchParams(window.location.search).get("redirect")
+    const safeRedirect = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
+      ? requestedRedirect
+      : null
+
+    if (safeRedirect) {
+      router.push(safeRedirect)
+    } else if (profile?.role === "admin") {
       router.push("/admin")
     } else {
       router.push("/dashboard")

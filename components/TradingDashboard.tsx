@@ -21,6 +21,7 @@ interface Trade {
   rr_actual: number
   hold_minutes: number
   symbol: string
+  contract_month?: number
 }
 
 interface Props {
@@ -43,7 +44,7 @@ const MONTH_FULL: Record<string, string> = {
 // overrides via CSS custom properties. Since Next.js inline styles can't do
 // media queries we inject a <style> tag once and use CSS classes.
 const GLOBAL_CSS = `
-  .td-grid-3 {
+  .td-metrics-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
@@ -68,12 +69,37 @@ const GLOBAL_CSS = `
   }
   .td-container { padding: 32px 24px 64px; }
   .td-header { margin-bottom: 28px; }
+  .td-trades-table { width: 100%; border-collapse: collapse; }
+  .td-trades-table th {
+    padding: 11px 16px;
+    text-align: right;
+    color: #94a3b8;
+    background: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .td-trades-table th:first-child { text-align: left; }
+  .td-trades-table td {
+    padding: 14px 16px;
+    border-top: 1px solid #f1f5f9;
+    text-align: right;
+    color: #334155;
+    font-size: 13px;
+  }
+  .td-trades-table td:first-child { text-align: left; }
 
   @media (max-width: 768px) {
-    .td-grid-3 {
+    .td-metrics-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-bottom: 10px;
+    }
+    .td-metrics-grid > .td-card:first-child {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdf8 100%) !important;
+      border-color: #bbf7d0 !important;
     }
     .td-grid-2 {
       grid-template-columns: 1fr;
@@ -96,12 +122,15 @@ const GLOBAL_CSS = `
     .td-month-btn { white-space: nowrap; flex-shrink: 0; }
     .td-container { padding: 20px 16px 48px; }
     .td-header { margin-bottom: 20px; }
-    .td-card { padding: 16px !important; }
+    .td-card { padding: 14px !important; }
     .td-card-label { font-size: 10px !important; }
+    .td-trades-table th, .td-trades-table td { padding: 11px 10px; }
+    .td-trades-price { display: none; }
+    .td-trades-lock { padding: 26px 18px !important; }
   }
 
   @media (max-width: 480px) {
-    .td-grid-3 {
+    .td-metrics-grid {
       grid-template-columns: 1fr 1fr;
     }
     .td-stat-value { font-size: 18px; }
@@ -180,7 +209,6 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
   for (let d = 1; d <= daysInMonth; d++) days.push(d)
 
   const weekDays = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-
   return (
     <div>
       <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -242,6 +270,165 @@ function PerformanceCalendar({ trades, selectedMonth }: { trades: Trade[], selec
           )
         })}
       </div>
+
+    </div>
+  )
+}
+
+function formatPrice(value: number) {
+  if (!Number.isFinite(value)) return "—"
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 4,
+  })
+}
+
+const FUTURES_MONTH_CODES: Record<number, string> = {
+  1: "F", 2: "G", 3: "H", 4: "J", 5: "K", 6: "M",
+  7: "N", 8: "Q", 9: "U", 10: "V", 11: "X", 12: "Z",
+}
+
+function formatContractSymbol(trade: Trade) {
+  const root = (trade.symbol || "").trim().toUpperCase()
+  const contractMonth = Number(trade.contract_month)
+  const monthCode = FUTURES_MONTH_CODES[contractMonth]
+  if (!root || !monthCode) return root || trade.commodity_name || "N/A"
+
+  const referenceDate = trade.exit_date || trade.entry_date
+  const referenceYear = Number(referenceDate?.slice(0, 4))
+  const referenceMonth = Number(referenceDate?.slice(5, 7))
+  if (!referenceYear || !referenceMonth) return `${root}${monthCode}`
+
+  const contractYear = contractMonth < referenceMonth ? referenceYear + 1 : referenceYear
+  return `${root}${monthCode}${String(contractYear).slice(-2)}`
+}
+
+function RecentTrades({
+  trades,
+  monthLabel,
+  revealLatest,
+}: {
+  trades: Trade[]
+  monthLabel: string
+  revealLatest: boolean
+}) {
+  const sortedTrades = useMemo(() => (
+    [...trades].sort((a, b) => {
+      const aTime = `${a.exit_date || ""}T${a.exit_time || "00:00:00"}`
+      const bTime = `${b.exit_date || ""}T${b.exit_time || "00:00:00"}`
+      return bTime.localeCompare(aTime)
+    })
+  ), [trades])
+
+  const visibleTrades = revealLatest ? sortedTrades.slice(0, 3) : []
+  const hiddenCount = Math.max(sortedTrades.length - visibleTrades.length, 0)
+
+  return (
+    <section className="td-card" style={{ position: "relative", marginBottom: 24, overflow: "hidden", border: "1px solid #e8ecf0", borderRadius: 14, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, padding: "20px 20px 14px" }}>
+        <div>
+          <div style={{ marginBottom: 4, color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
+            Vị thế gần nhất
+          </div>
+          <div style={{ color: "#64748b", fontSize: 12 }}>
+            {revealLatest ? "Tối đa 3 giao dịch mới nhất" : "Lịch sử giao dịch được bảo vệ"} · {monthLabel}
+          </div>
+        </div>
+        <div style={{ padding: "4px 9px", border: "1px solid #d1fae5", borderRadius: 99, background: "#ecfdf5", color: "#047857", fontSize: 10, fontWeight: 700 }}>
+          Đã đóng
+        </div>
+      </div>
+
+      {revealLatest && (
+        <div style={{ overflowX: "auto" }}>
+          <table className="td-trades-table">
+            <thead>
+              <tr>
+                <th>Sản phẩm</th>
+                <th className="td-trades-price">Giá vào</th>
+                <th className="td-trades-price">Giá thoát</th>
+                <th>Net PNL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleTrades.map((trade) => (
+                <tr key={trade.id}>
+                  <td>
+                    <div>
+                      <div style={{ color: "#0f172a", fontSize: 14, fontWeight: 800, letterSpacing: ".01em" }}>{formatContractSymbol(trade)}</div>
+                      <div style={{ marginTop: 3, color: "#94a3b8", fontSize: 10 }}>{trade.exit_date}</div>
+                    </div>
+                  </td>
+                  <td className="td-trades-price" style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(trade.entry_price)}</td>
+                  <td className="td-trades-price" style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(trade.exit_price)}</td>
+                  <td style={{ color: trade.net_pnl >= 0 ? "#00A67E" : "#ef4444", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                    {trade.net_pnl >= 0 ? "+" : "-"}${Math.abs(trade.net_pnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {(hiddenCount > 0 || !revealLatest) && (
+        <div className="td-trades-lock" style={{ position: "relative", minHeight: revealLatest ? undefined : 230, padding: revealLatest ? "32px 22px 30px" : "58px 22px 48px", overflow: "hidden", textAlign: "center", borderTop: "1px solid #eef2f6", background: "linear-gradient(180deg, #fff 0%, #f8fafc 100%)" }}>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, opacity: .5, filter: "blur(5px)", pointerEvents: "none" }}>
+            {[0, 1].map((row) => (
+              <div key={row} style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr 1fr 1fr", gap: 18, padding: "12px 18px", borderBottom: "1px solid #e2e8f0" }}>
+                <span style={{ height: 12, borderRadius: 6, background: "#cbd5e1" }} />
+                <span style={{ height: 12, borderRadius: 6, background: "#e2e8f0" }} />
+                <span style={{ height: 12, borderRadius: 6, background: "#e2e8f0" }} />
+                <span style={{ height: 12, borderRadius: 6, background: row ? "#fecaca" : "#bbf7d0" }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "8px 0" }}>
+            <div style={{ marginBottom: 7, color: "#0f172a", fontSize: 15, fontWeight: 800 }}>
+              {revealLatest ? `Còn ${hiddenCount} vị thế` : "Lịch sử giao dịch đầy đủ"}
+            </div>
+            <p style={{ margin: "0 0 15px", color: "#64748b", fontSize: 12, lineHeight: 1.55 }}>
+              Nhận lịch sử giao dịch đầy đủ và trao đổi cùng chuyên gia.
+            </p>
+            <Link href="/lien-he#dat-lich" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 20px", borderRadius: 8, background: "#00A67E", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+              Đăng ký tư vấn
+            </Link>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function MonthFilterRow({
+  availableMonths,
+  selectedMonth,
+  onSelect,
+}: {
+  availableMonths: string[]
+  selectedMonth: string
+  onSelect: (month: string) => void
+}) {
+  return (
+    <div className="td-month-scroll">
+      <button
+        className="td-month-btn"
+        onClick={() => onSelect("all")}
+        style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b", transition: "all 0.15s" }}>
+        Tất cả
+      </button>
+      {availableMonths.map((value) => {
+        const [year, month] = value.split("-")
+        return (
+          <button
+            key={value}
+            className="td-month-btn"
+            onClick={() => onSelect(value)}
+            style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === value ? "#00A67E" : "#fff", borderColor: selectedMonth === value ? "#00A67E" : "#e2e8f0", color: selectedMonth === value ? "#fff" : "#64748b", transition: "all 0.15s" }}>
+            {MONTH_NAMES[month]} {year}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -261,6 +448,21 @@ export default function TradingDashboard({ trades }: Props) {
     if (selectedMonth === "all") return trades
     return trades.filter(t => t.exit_date?.startsWith(selectedMonth))
   }, [trades, selectedMonth])
+
+  const selectedMonthLabel = useMemo(() => {
+    const displayMonth = selectedMonth === "all" ? availableMonths[0] : selectedMonth
+    if (!displayMonth) return "Chưa có dữ liệu"
+    const [year, month] = displayMonth.split("-")
+    return `${MONTH_NAMES[month]} ${year}`
+  }, [availableMonths, selectedMonth])
+
+  const latestMonth = availableMonths[0] || ""
+  const revealLatestTrades = selectedMonth === "all" || selectedMonth === latestMonth
+  const recentTrades = useMemo(() => {
+    if (!latestMonth) return []
+    if (revealLatestTrades) return trades.filter((trade) => trade.exit_date?.startsWith(latestMonth))
+    return filteredTrades
+  }, [filteredTrades, latestMonth, revealLatestTrades, trades])
 
   const stats = useMemo(() => {
     if (!filteredTrades.length) return null
@@ -315,34 +517,11 @@ export default function TradingDashboard({ trades }: Props) {
     }
   }, [filteredTrades])
 
-  const MonthFilterRow = () => (
-    <div className="td-month-scroll">
-      <button
-        className="td-month-btn"
-        onClick={() => setSelectedMonth("all")}
-        style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b", transition: "all 0.15s" }}>
-        Tất cả
-      </button>
-      {availableMonths.map(m => {
-        const [year, month] = m.split("-")
-        return (
-          <button
-            key={m}
-            className="td-month-btn"
-            onClick={() => setSelectedMonth(m)}
-            style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === m ? "#00A67E" : "#fff", borderColor: selectedMonth === m ? "#00A67E" : "#e2e8f0", color: selectedMonth === m ? "#fff" : "#64748b", transition: "all 0.15s" }}>
-            {MONTH_NAMES[month]} {year}
-          </button>
-        )
-      })}
-    </div>
-  )
-
   if (!stats) return (
     <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
       <GlobalStyle />
       <div style={{ maxWidth: "1200px", margin: "0 auto" }} className="td-container">
-        <MonthFilterRow />
+        <MonthFilterRow availableMonths={availableMonths} selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
         <div style={{ textAlign: "center", padding: "80px 40px" }}>
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>📊</div>
           <p style={{ color: "#94a3b8" }}>Không có dữ liệu cho tháng này</p>
@@ -384,25 +563,17 @@ export default function TradingDashboard({ trades }: Props) {
           </p>
 
           {/* Month filter — horizontal scroll on mobile */}
-          <MonthFilterRow />
+          <MonthFilterRow availableMonths={availableMonths} selectedMonth={selectedMonth} onSelect={setSelectedMonth} />
         </div>
 
-        {/* Metric cards row 1 */}
-        <div className="td-grid-3">
+        {/* Performance metrics */}
+        <div className="td-metrics-grid">
           <StatCard label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" />
           <StatCard label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins}W / ${stats.losses}L`} color="#00A67E" />
           <StatCard label="AVG R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ TB" color="#3b82f6" />
-        </div>
-
-        {/* Metric cards row 2 */}
-        <div className="td-grid-3">
           <StatCard label="PROFIT FACTOR" value={stats.profitFactor.toFixed(2)} sub="Tổng lãi / tổng lỗ" color="#f59e0b" />
           <StatCard label="EXP. VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng / lệnh" color="#8b5cf6" />
           <StatCard label="HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Giữ lệnh TB" color="#0f172a" />
-        </div>
-
-        {/* Metric cards row 3 */}
-        <div className="td-grid-3">
           <StatCard label="TOTAL FEES" value={`$${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Tổng phí giao dịch" color="#ef4444" />
           <StatCard label="MAX DRAWDOWN" value={`-$${stats.maxDrawdown.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức giảm tối đa" color="#ef4444" />
           <StatCard label="MAX RUNUP" value={`+$${stats.maxRunup.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức tăng tối đa" color="#00A67E" />
@@ -457,20 +628,10 @@ export default function TradingDashboard({ trades }: Props) {
           <PerformanceCalendar trades={filteredTrades} selectedMonth={selectedMonth} />
         </div>
 
-        {/* CTA */}
-        <div style={{ textAlign: "center", padding: "28px 20px", background: "rgba(0,166,126,0.05)", border: "1px solid rgba(0,166,126,0.15)", borderRadius: "16px" }}>
-          <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "8px" }}>
-            Đây là kết quả giao dịch thực tế — không chỉnh sửa, không chọn lọc
-          </p>
-          <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "16px" }}>
-            Bắt đầu đầu tư cùng BAMBOO100
-          </h3>
-          <Link href="/lien-he" style={{ display: "inline-block", background: "#00A67E", color: "#fff", fontSize: "14px", fontWeight: 700, padding: "12px 28px", borderRadius: "8px", textDecoration: "none" }}>
-            Đặt lịch tư vấn miễn phí →
-          </Link>
-        </div>
+        <RecentTrades trades={recentTrades} monthLabel={selectedMonthLabel} revealLatest={revealLatestTrades} />
 
       </div>
     </div>
   )
 }
+

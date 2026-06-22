@@ -7,13 +7,29 @@ import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { User, Bookmark, LogOut, ChevronDown, LayoutDashboard } from "lucide-react"
 
-const NAV_LINKS = [
+const NAV_LINKS_LEFT = [
   { label: "Phân tích", href: "/phan-tich" },
-  { label: "Dịch vụ", href: "/dich-vu" },
 ]
 
 const NAV_LINKS_RIGHT = [
   { label: "Về chúng tôi", href: "/gioi-thieu" },
+]
+
+const DICH_VU_MENU = [
+  {
+    icon: "ti-chart-bar",
+    label: "Dashboard Hiệu suất",
+    desc: "Thống kê giao dịch thực tế, minh bạch, có kiểm chứng",
+    href: "/dich-vu/hieu-suat",
+    color: "#00A67E",
+  },
+  {
+    icon: "ti-file-description",
+    label: "Báo cáo COT",
+    desc: "Vị thế quỹ đầu cơ từ CFTC trên toàn bộ thị trường hàng hoá",
+    href: "/dich-vu/bao-cao-cot",
+    color: "#3b82f6",
+  },
 ]
 
 const HOC_VIEN_MENU = [
@@ -52,11 +68,17 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
+  // Học viện mega menu
   const [megaOpen, setMegaOpen] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Dịch vụ dropdown
+  const [dichVuOpen, setDichVuOpen] = useState(false)
+  const dichVuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [hocVienOpen, setHocVienOpen] = useState(false)
+  const [dichVuDrawerOpen, setDichVuDrawerOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [scrolled, setScrolled] = useState(false)
@@ -129,6 +151,7 @@ export default function Navbar() {
 
   const close = () => setDrawerOpen(false)
 
+  // Học viện handlers
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setMegaOpen(true)
@@ -137,15 +160,22 @@ export default function Navbar() {
     timeoutRef.current = setTimeout(() => setMegaOpen(false), 150)
   }
 
+  // Dịch vụ handlers
+  const handleDichVuEnter = () => {
+    if (dichVuTimeoutRef.current) clearTimeout(dichVuTimeoutRef.current)
+    setDichVuOpen(true)
+  }
+  const handleDichVuLeave = () => {
+    dichVuTimeoutRef.current = setTimeout(() => setDichVuOpen(false), 150)
+  }
+
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Tài khoản"
   const avatarLetter = displayName[0].toUpperCase()
   const isAdminOrEditor = profile?.role === "admin" || profile?.role === "editor"
 
-  // ── MÀU SẮC NAVBAR ──
-  // FIX 1: Giảm threshold từ 300 → 180 để transition nhanh hơn như XTB
   const SCROLL_THRESHOLD = 80
   const rawRatio = Math.min(scrollY / SCROLL_THRESHOLD, 1)
-const ratio = Math.pow(rawRatio, 0.6)
+  const ratio = Math.pow(rawRatio, 0.6)
   const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t)
 
   const navBg = isDarkHero
@@ -162,7 +192,6 @@ const ratio = Math.pow(rawRatio, 0.6)
 
   const accentScaleX = isDarkHero ? 0 : ratio
 
-  // FIX 2: Opacity chữ trắng = 1 (thay vì 0.65) khi ở đầu trang — giống XTB
   const linkColor = isDarkHero
     ? `rgba(${lerp(255, 15, ratio)},${lerp(255, 25, ratio)},${lerp(255, 50, ratio)},1)`
     : "rgba(15,25,50,1)"
@@ -171,12 +200,10 @@ const ratio = Math.pow(rawRatio, 0.6)
     ? `rgb(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)})`
     : "rgb(10,22,40)"
 
-  // FIX 3: loginColor opacity = 1 thay vì 0.75
   const loginColor = isDarkHero
     ? `rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},1)`
     : "rgba(10,22,40,1)"
 
-  // FIX 4: loginBorder rõ hơn ở đầu trang (opacity 0.5 → đủ thấy trên hero tối)
   const loginBorder = isDarkHero
     ? `1px solid rgba(${lerp(255, 10, ratio)},${lerp(255, 22, ratio)},${lerp(255, 40, ratio)},${(0.5 - 0.35 * ratio).toFixed(2)})`
     : "1px solid rgba(10,22,40,0.25)"
@@ -216,6 +243,13 @@ const ratio = Math.pow(rawRatio, 0.6)
         @keyframes fadeDown {
           from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
           to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .dich-vu-menu {
+          position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+          background: #fff; border-radius: 14px; border: 0.5px solid #e2e8f0;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+          padding: 8px; min-width: 300px; z-index: 200;
+          animation: fadeDown 0.15s ease;
         }
         .mega-item {
           display: flex; align-items: flex-start; gap: 12px;
@@ -259,14 +293,13 @@ const ratio = Math.pow(rawRatio, 0.6)
         <nav className="nb-nav" style={{
           background: navBg,
           boxShadow,
-          // FIX 5: Thêm border-color vào transition để không bị flash
           transition: "background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
           display: "flex", alignItems: "center",
           justifyContent: "flex-start", gap: "8px", padding: "0 40px", height: "60px",
           borderBottom: `1px solid ${borderColor}`,
           position: "relative", zIndex: 100,
         }}>
-          {/* Accent line — chỉ hiện trên trang trắng khi scroll */}
+          {/* Accent line */}
           {!isDarkHero && (
             <div style={{
               position: "absolute", bottom: 0, left: 0,
@@ -289,7 +322,9 @@ const ratio = Math.pow(rawRatio, 0.6)
 
           {/* ── DESKTOP NAV ── */}
           <div className="nb-desktop" style={{ position: "relative", marginLeft: "24px" }}>
-            {NAV_LINKS.map((item) => (
+
+            {/* Phân tích */}
+            {NAV_LINKS_LEFT.map((item) => (
               <Link key={item.label} href={item.href} style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px", textDecoration: "none",
@@ -297,14 +332,66 @@ const ratio = Math.pow(rawRatio, 0.6)
               }}>{item.label}</Link>
             ))}
 
+            {/* Dịch vụ dropdown */}
+            <div onMouseEnter={handleDichVuEnter} onMouseLeave={handleDichVuLeave} style={{ position: "relative" }}>
+              <span style={{
+                color: linkColor, fontSize: "13px", fontWeight: 600,
+                padding: "6px 12px", borderRadius: "6px",
+                display: "flex", alignItems: "center", gap: "3px",
+                transition: "color 0.3s ease", cursor: "default",
+              }}>
+                Dịch vụ
+                <ChevronDown
+                  size={13}
+                  color={linkColor}
+                  style={{
+                    transition: "transform 0.15s",
+                    transform: dichVuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    opacity: 0.7,
+                  }}
+                />
+              </span>
+
+              {dichVuOpen && (
+                <div className="dich-vu-menu" onMouseEnter={handleDichVuEnter} onMouseLeave={handleDichVuLeave}>
+                  {DICH_VU_MENU.map((item) => (
+                    <Link key={item.href} href={item.href} className="mega-item">
+                      <div style={{
+                        width: "38px", height: "38px", borderRadius: "10px", flexShrink: 0,
+                        background: item.color + "15",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <i className={`ti ${item.icon}`} style={{ fontSize: "18px", color: item.color }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#0A1628", marginBottom: "3px" }}>{item.label}</div>
+                        <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.5 }}>{item.desc}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Học viện mega menu */}
             <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "relative" }}>
               <span style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,
                 padding: "6px 12px", borderRadius: "6px",
-                display: "flex", alignItems: "center", transition: "color 0.3s ease",
-                cursor: "default",
-              }}>Học viện</span>
+                display: "flex", alignItems: "center", gap: "3px",
+                transition: "color 0.3s ease", cursor: "default",
+              }}>
+                Học viện
+                <ChevronDown
+                  size={13}
+                  color={linkColor}
+                  style={{
+                    transition: "transform 0.15s",
+                    transform: megaOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    opacity: 0.7,
+                  }}
+                />
+              </span>
 
               {megaOpen && (
                 <div className="mega-menu" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
@@ -327,6 +414,7 @@ const ratio = Math.pow(rawRatio, 0.6)
               )}
             </div>
 
+            {/* Về chúng tôi */}
             {NAV_LINKS_RIGHT.map((item) => (
               <Link key={item.label} href={item.href} style={{
                 color: linkColor, fontSize: "13px", fontWeight: 600,
@@ -491,7 +579,8 @@ const ratio = Math.pow(rawRatio, 0.6)
           )}
 
           <div style={{ flex: 1, padding: "8px 0" }}>
-            {NAV_LINKS.map((item) => (
+            {/* Phân tích */}
+            {NAV_LINKS_LEFT.map((item) => (
               <Link key={item.label} href={item.href} onClick={close} style={{
                 display: "block", padding: "16px 24px",
                 color: "#0A1628", fontSize: "15px", fontWeight: 600,
@@ -499,6 +588,43 @@ const ratio = Math.pow(rawRatio, 0.6)
               }}>{item.label}</Link>
             ))}
 
+            {/* Dịch vụ accordion */}
+            <button
+              onClick={() => setDichVuDrawerOpen(!dichVuDrawerOpen)}
+              style={{
+                width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "16px 24px", background: "transparent", border: "none", cursor: "pointer",
+                borderBottom: "1px solid #f1f5f9",
+              }}
+            >
+              <span style={{ color: "#0A1628", fontSize: "15px", fontWeight: 600 }}>Dịch vụ</span>
+              <ChevronDown
+                size={16}
+                color="#94a3b8"
+                style={{ transform: dichVuDrawerOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+              />
+            </button>
+
+            {dichVuDrawerOpen && DICH_VU_MENU.map((item) => (
+              <Link key={item.href} href={item.href} onClick={close} style={{
+                display: "flex", alignItems: "center", gap: "12px",
+                padding: "13px 24px 13px 32px",
+                color: "#374151", fontSize: "14px", fontWeight: 600,
+                textDecoration: "none", borderBottom: "1px solid #f1f5f9",
+                background: "#fafafa",
+              }}>
+                <div style={{
+                  width: "30px", height: "30px", borderRadius: "8px", flexShrink: 0,
+                  background: item.color + "15",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <i className={`ti ${item.icon}`} style={{ fontSize: "15px", color: item.color }} />
+                </div>
+                {item.label}
+              </Link>
+            ))}
+
+            {/* Học viện accordion */}
             <button
               onClick={() => setHocVienOpen(!hocVienOpen)}
               style={{
@@ -534,6 +660,7 @@ const ratio = Math.pow(rawRatio, 0.6)
               </Link>
             ))}
 
+            {/* Về chúng tôi */}
             {NAV_LINKS_RIGHT.map((item) => (
               <Link key={item.label} href={item.href} onClick={close} style={{
                 display: "block", padding: "16px 24px",

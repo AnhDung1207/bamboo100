@@ -7,7 +7,7 @@ const SERVICES = [
   {
     href: "/dich-vu/hieu-suat",
     icon: "📊",
-    title: "Dashboard Hiệu suất",
+    title: "Dashboard Hiệu suất đầu tư",
     desc: "Thống kê hiệu suất giao dịch thực tế của BAMBOO100 — minh bạch, rõ ràng, có kiểm chứng.",
     color: "#00A67E",
     bg: "rgba(0,166,126,0.06)",

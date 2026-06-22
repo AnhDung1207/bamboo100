@@ -4,11 +4,11 @@ import Navbar from "@/components/Navbar"
 import TradingDashboard from "@/components/TradingDashboard"
 
 export const metadata: Metadata = {
-  title: "Hiệu suất giao dịch | BAMBOO100",
-  description: "Thống kê hiệu suất giao dịch thực tế của BAMBOO100 — minh bạch, rõ ràng, có kiểm chứng.",
+  title: "Dashboard hiệu suất đầu tư | BAMBOO100",
+  description: "Dashboard thống kê hiệu suất đầu tư của BAMBOO100 — minh bạch, rõ ràng và cập nhật liên tục.",
   openGraph: {
-    title: "Hiệu suất giao dịch | BAMBOO100",
-    description: "Thống kê hiệu suất giao dịch thực tế của BAMBOO100.",
+    title: "Dashboard hiệu suất đầu tư | BAMBOO100",
+    description: "Dashboard thống kê hiệu suất đầu tư của BAMBOO100.",
     url: "https://bamboo100.vn/dich-vu/hieu-suat",
     images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "BAMBOO100 Trading Dashboard" }],
   },

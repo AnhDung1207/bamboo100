@@ -112,6 +112,68 @@ function groupByDate(articles: any[]) {
   return groups
 }
 
+function ArticleBadge({ type }: { type: "hot" | "premium" }) {
+  const isHot = type === "hot"
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "5px",
+        height: "24px",
+        padding: "0 9px",
+        border: isHot ? "none" : "1px solid rgba(251,191,36,.62)",
+        borderRadius: "999px",
+        background: isHot
+          ? "#ef3340"
+          : "linear-gradient(135deg, #20180a 0%, #3a2808 100%)",
+        boxShadow: isHot ? "none" : "inset 0 1px 0 rgba(255,255,255,.1), 0 2px 8px rgba(180,120,10,.18)",
+        color: isHot ? "#fff" : "#fbbf24",
+        fontSize: "11px",
+        fontWeight: 700,
+        letterSpacing: 0,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {isHot ? (
+        <svg
+          aria-hidden="true"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 22c4.4 0 8-3.2 8-7.2 0-3.1-1.7-5.8-4.3-8.5-.2 2.4-1.4 4-3 4.8.3-3.7-1.7-6.6-5.4-9.1.3 3-1.5 5.1-2.7 7C3.6 10.5 3 12.4 3 14.4 3 18.6 7 22 12 22Z" />
+          <path d="M9.5 17.1c0 1.6 1.1 2.9 2.6 2.9s2.7-1.2 2.7-2.8c0-1.1-.6-2.1-1.8-3.2-.1 1-.5 1.7-1.1 2.1 0-1.4-.7-2.5-1.8-3.4.1 1.4-.6 2.4-.6 4.4Z" />
+        </svg>
+      ) : (
+        <svg
+          aria-hidden="true"
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m3.5 7 4.4 3.8L12 5l4.1 5.8L20.5 7l-1.7 10H5.2L3.5 7Z" />
+          <path d="M5.5 20h13" />
+        </svg>
+      )}
+      <span>{isHot ? "Hot" : "Premium"}</span>
+    </span>
+  )
+}
+
 function FeaturedCard({ article }: { article: any }) {
   const catSlug = article.categories?.slug || ""
   const catColor = CATEGORY_COLORS[catSlug] || "#00C389"
@@ -140,13 +202,13 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
 
   return (
     <Link href={`/phan-tich/${article.slug}`} style={{ textDecoration: "none", display: "block" }}>
-      <div style={{
+      <div className="analysis-featured-card" style={{
         borderRadius: "12px", overflow: "hidden", position: "relative",
         minHeight: "220px", cursor: "pointer",
         background: hasBgImage ? `url(${article.thumbnail_url}) center/cover` : "#0A1628",
       }}>
         {/* Overlay tối sâu nửa trái */}
-        <div style={{
+        <div className="analysis-featured-overlay" style={{
           position: "absolute", inset: 0,
           background: hasBgImage
             ? "linear-gradient(to right, rgba(10,22,40,1) 0%, rgba(10,22,40,0.98) 38%, rgba(10,22,40,0.65) 58%, rgba(10,22,40,0.05) 100%)"
@@ -163,7 +225,7 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
         )}
 
         {/* Nội dung căn giữa dọc */}
-        <div style={{
+        <div className="analysis-featured-content" style={{
           position: "relative", zIndex: 2,
           width: "62%", height: "100%", minHeight: "220px",
           padding: "0 28px",
@@ -171,7 +233,7 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
           justifyContent: "center", gap: "12px",
         }}>
           {/* Dòng 1: thumbnail icon + tên sản phẩm */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="analysis-featured-category" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{
               width: "28px", height: "28px", borderRadius: "6px",
               background: "rgba(255,255,255,0.1)",
@@ -190,28 +252,28 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
           </div>
 
           {/* Dòng 2: Tiêu đề */}
-          <h2 style={{
+          <h2 className="analysis-featured-title" style={{
             color: "#fff", fontSize: "18px", fontWeight: 700,
             lineHeight: 1.45, margin: 0,
           }}>{article.title}</h2>
 
           {/* Dòng 3: Nhóm ngành · Tên SP · Giờ · Hot · Premium */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
+          <div className="analysis-featured-meta" style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
             <span>{groupName}</span>
-            <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
-            <span>{article.categories?.name || "Hàng Hóa"}</span>
+            <span className="analysis-featured-meta-product" style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
+            <span className="analysis-featured-meta-product">{article.categories?.name || "Hàng Hóa"}</span>
             <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
             <span>{article.published_at ? formatTime(article.published_at) : ""}</span>
             {article.is_hot && (
               <>
                 <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
-                <span style={{ background: "rgba(226,75,74,0.25)", color: "#E24B4A", padding: "1px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 600 }}>🔥 Hot</span>
+                <ArticleBadge type="hot" />
               </>
             )}
             {article.is_premium && (
               <>
                 <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
-                <span style={{ background: "rgba(239,159,39,0.2)", color: "#EF9F27", padding: "1px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 600 }}>Premium</span>
+                <ArticleBadge type="premium" />
               </>
             )}
           </div>
@@ -294,13 +356,13 @@ const thumbnail = CATEGORY_THUMBNAILS[catSlug] || CATEGORY_THUMBNAILS[groupSlug]
           {article.is_hot && (
             <>
               <span style={{ color: "#cbd5e1" }}>·</span>
-              <span style={{ background: "#FEE2E2", color: "#B91C1C", padding: "1px 6px", borderRadius: "3px", fontSize: "9px", fontWeight: 600 }}>🔥 Hot</span>
+              <ArticleBadge type="hot" />
             </>
           )}
           {article.is_premium && (
             <>
               <span style={{ color: "#cbd5e1" }}>·</span>
-              <span style={{ background: "#FEF3C7", color: "#92400E", padding: "1px 6px", borderRadius: "3px", fontSize: "9px", fontWeight: 600 }}>Premium</span>
+              <ArticleBadge type="premium" />
             </>
           )}
         </div>
@@ -336,6 +398,77 @@ export default function ArticleFeed({ articles }: { articles: any[] }) {
 
   return (
     <div>
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .analysis-featured-card {
+            height: 390px !important;
+            min-height: 390px !important;
+            background-position: center top !important;
+          }
+
+          .analysis-featured-overlay {
+            background: linear-gradient(
+              to bottom,
+              rgba(10, 22, 40, 0.02) 0%,
+              rgba(10, 22, 40, 0.08) 36%,
+              rgba(10, 22, 40, 0.76) 57%,
+              #0f1720 72%,
+              #0f1720 100%
+            ) !important;
+          }
+
+          .analysis-featured-content {
+            box-sizing: border-box;
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 390px !important;
+            padding: 20px 22px 24px !important;
+            justify-content: flex-end !important;
+            gap: 10px !important;
+          }
+
+          .analysis-featured-category {
+            width: fit-content;
+          }
+
+          .analysis-featured-title {
+            display: -webkit-box;
+            margin: 0 !important;
+            overflow: hidden;
+            font-size: 18px !important;
+            line-height: 1.42 !important;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+          }
+
+          .analysis-featured-meta {
+            flex-wrap: nowrap !important;
+            overflow: hidden;
+            font-size: 11px !important;
+            white-space: nowrap;
+          }
+
+          .analysis-featured-meta-product {
+            display: none;
+          }
+        }
+
+        @media (max-width: 390px) {
+          .analysis-featured-card,
+          .analysis-featured-content {
+            height: 360px !important;
+            min-height: 360px !important;
+          }
+
+          .analysis-featured-content {
+            padding: 18px 18px 21px !important;
+          }
+
+          .analysis-featured-title {
+            font-size: 17px !important;
+          }
+        }
+      `}</style>
       {visibleEntries.map(([dateLabel, dayArticles]) => {
         const featured = dayArticles[0]
         const rest = dayArticles.slice(1)

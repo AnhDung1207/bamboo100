@@ -81,6 +81,8 @@ const GLOBAL_CSS = `
     text-transform: uppercase;
   }
   .td-trades-table th:first-child { text-align: left; }
+  .td-trades-table th:nth-child(2),
+  .td-trades-table td:nth-child(2) { text-align: center; }
   .td-trades-table td {
     padding: 14px 16px;
     border-top: 1px solid #f1f5f9;
@@ -89,18 +91,22 @@ const GLOBAL_CSS = `
     font-size: 13px;
   }
   .td-trades-table td:first-child { text-align: left; }
+  .td-trades-mobile { display: none; }
 
   @media (max-width: 768px) {
+    .td-daily-pnl { display: none; }
     .td-metrics-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-bottom: 10px;
     }
-    .td-metrics-grid > .td-card:first-child {
-      grid-column: 1 / -1;
+    .td-metric-primary {
       background: linear-gradient(135deg, #ffffff 0%, #f0fdf8 100%) !important;
       border-color: #bbf7d0 !important;
     }
+    .td-metric-mobile-hidden { display: none; }
+    .td-metric-primary { grid-column: 1; grid-row: 1; }
+    .td-metric-fees { grid-column: 2; grid-row: 1; }
     .td-grid-2 {
       grid-template-columns: 1fr;
       gap: 10px;
@@ -124,9 +130,56 @@ const GLOBAL_CSS = `
     .td-header { margin-bottom: 20px; }
     .td-card { padding: 14px !important; }
     .td-card-label { font-size: 10px !important; }
-    .td-trades-table th, .td-trades-table td { padding: 11px 10px; }
-    .td-trades-price { display: none; }
-    .td-trades-lock { padding: 26px 18px !important; }
+    .td-history-header { padding: 18px 16px 14px !important; }
+    .td-trades-desktop { display: none; }
+    .td-trades-mobile {
+      display: grid;
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+    .td-trade-mobile-card {
+      padding: 14px;
+      border: 1px solid #e8eef3;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+    }
+    .td-trade-mobile-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+    .td-trade-mobile-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .td-trade-mobile-metric {
+      min-width: 0;
+      padding: 9px 8px;
+      border-radius: 9px;
+      background: #f8fafc;
+    }
+    .td-trade-mobile-label {
+      margin-bottom: 5px;
+      color: #94a3b8;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .td-trade-mobile-value {
+      overflow: hidden;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .td-trades-lock { padding: 24px 16px 30px !important; }
   }
 
   @media (max-width: 480px) {
@@ -145,11 +198,11 @@ function GlobalStyle() {
   return <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
 }
 
-function StatCard({ label, value, sub, color = "#00A67E" }: {
-  label: string; value: string; sub?: string; color?: string
+function StatCard({ label, value, sub, color = "#00A67E", className = "" }: {
+  label: string; value: string; sub?: string; color?: string; className?: string
 }) {
   return (
-    <div className="td-card" style={{
+    <div className={`td-card ${className}`.trim()} style={{
       background: "#fff",
       border: "1px solid #e8ecf0",
       borderRadius: "14px",
@@ -325,26 +378,32 @@ function RecentTrades({
 
   return (
     <section className="td-card" style={{ position: "relative", marginBottom: 24, overflow: "hidden", border: "1px solid #e8ecf0", borderRadius: 14, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,.06)" }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, padding: "20px 20px 14px" }}>
+      <div className="td-history-header" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, padding: "20px 20px 14px" }}>
         <div>
           <div style={{ marginBottom: 4, color: "#94a3b8", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>
-            Vị thế gần nhất
+            Lịch sử
           </div>
           <div style={{ color: "#64748b", fontSize: 12 }}>
-            {revealLatest ? "Tối đa 3 giao dịch mới nhất" : "Lịch sử giao dịch được bảo vệ"} · {monthLabel}
+            {revealLatest ? "Giao dịch mới nhất" : "Lịch sử giao dịch được bảo vệ"} · {monthLabel}
           </div>
-        </div>
-        <div style={{ padding: "4px 9px", border: "1px solid #d1fae5", borderRadius: 99, background: "#ecfdf5", color: "#047857", fontSize: 10, fontWeight: 700 }}>
-          Đã đóng
         </div>
       </div>
 
       {revealLatest && (
-        <div style={{ overflowX: "auto" }}>
-          <table className="td-trades-table">
-            <thead>
+        <>
+        <div className="td-trades-desktop" style={{ overflowX: "auto" }}>
+        <table className="td-trades-table">
+          <colgroup>
+            <col style={{ width: "26%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "20%" }} />
+          </colgroup>
+          <thead>
               <tr>
                 <th>Sản phẩm</th>
+                <th>Loại lệnh</th>
                 <th className="td-trades-price">Giá vào</th>
                 <th className="td-trades-price">Giá thoát</th>
                 <th>Net PNL</th>
@@ -359,6 +418,17 @@ function RecentTrades({
                       <div style={{ marginTop: 3, color: "#94a3b8", fontSize: 10 }}>{trade.exit_date}</div>
                     </div>
                   </td>
+                  <td>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      minWidth: 48, padding: "4px 9px", borderRadius: 99,
+                      background: trade.direction?.toLowerCase() === "buy" ? "#dcfce7" : trade.direction?.toLowerCase() === "sell" ? "#fee2e2" : "#f1f5f9",
+                      color: trade.direction?.toLowerCase() === "buy" ? "#166534" : trade.direction?.toLowerCase() === "sell" ? "#991b1b" : "#64748b",
+                      fontSize: 10, fontWeight: 800,
+                    }}>
+                      {trade.direction?.toLowerCase() === "buy" ? "Mua" : trade.direction?.toLowerCase() === "sell" ? "Bán" : "—"}
+                    </span>
+                  </td>
                   <td className="td-trades-price" style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(trade.entry_price)}</td>
                   <td className="td-trades-price" style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(trade.exit_price)}</td>
                   <td style={{ color: trade.net_pnl >= 0 ? "#00A67E" : "#ef4444", fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
@@ -369,14 +439,57 @@ function RecentTrades({
             </tbody>
           </table>
         </div>
+        <div className="td-trades-mobile">
+          {visibleTrades.map((trade) => {
+            const isBuy = trade.direction?.toLowerCase() === "buy"
+            const isSell = trade.direction?.toLowerCase() === "sell"
+            const pnlText = `${trade.net_pnl >= 0 ? "+" : "-"}$${Math.abs(trade.net_pnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+
+            return (
+              <article className="td-trade-mobile-card" key={`mobile-${trade.id}`}>
+                <div className="td-trade-mobile-head">
+                  <div>
+                    <div style={{ color: "#0f172a", fontSize: 15, fontWeight: 800, letterSpacing: ".01em" }}>{formatContractSymbol(trade)}</div>
+                    <div style={{ marginTop: 3, color: "#94a3b8", fontSize: 10 }}>{trade.exit_date}</div>
+                  </div>
+                  <span style={{
+                    display: "inline-flex", minWidth: 50, alignItems: "center", justifyContent: "center",
+                    padding: "6px 11px", borderRadius: 999,
+                    background: isBuy ? "#dcfce7" : isSell ? "#fee2e2" : "#f1f5f9",
+                    color: isBuy ? "#15803d" : isSell ? "#b91c1c" : "#64748b",
+                    fontSize: 10, fontWeight: 800,
+                  }}>
+                    {isBuy ? "Mua" : isSell ? "Bán" : "—"}
+                  </span>
+                </div>
+                <div className="td-trade-mobile-metrics">
+                  <div className="td-trade-mobile-metric">
+                    <div className="td-trade-mobile-label">Giá vào</div>
+                    <div className="td-trade-mobile-value">{formatPrice(trade.entry_price)}</div>
+                  </div>
+                  <div className="td-trade-mobile-metric">
+                    <div className="td-trade-mobile-label">Giá thoát</div>
+                    <div className="td-trade-mobile-value">{formatPrice(trade.exit_price)}</div>
+                  </div>
+                  <div className="td-trade-mobile-metric">
+                    <div className="td-trade-mobile-label">Net PNL</div>
+                    <div className="td-trade-mobile-value" style={{ color: trade.net_pnl >= 0 ? "#00A67E" : "#ef4444" }}>{pnlText}</div>
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+        </>
       )}
 
       {(hiddenCount > 0 || !revealLatest) && (
         <div className="td-trades-lock" style={{ position: "relative", minHeight: revealLatest ? undefined : 230, padding: revealLatest ? "32px 22px 30px" : "58px 22px 48px", overflow: "hidden", textAlign: "center", borderTop: "1px solid #eef2f6", background: "linear-gradient(180deg, #fff 0%, #f8fafc 100%)" }}>
           <div aria-hidden="true" style={{ position: "absolute", inset: 0, opacity: .5, filter: "blur(5px)", pointerEvents: "none" }}>
             {[0, 1].map((row) => (
-              <div key={row} style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr 1fr 1fr", gap: 18, padding: "12px 18px", borderBottom: "1px solid #e2e8f0" }}>
+              <div key={row} style={{ display: "grid", gridTemplateColumns: "1.7fr .7fr 1fr 1fr 1fr", gap: 18, padding: "12px 18px", borderBottom: "1px solid #e2e8f0" }}>
                 <span style={{ height: 12, borderRadius: 6, background: "#cbd5e1" }} />
+                <span style={{ height: 12, borderRadius: 6, background: row ? "#fecaca" : "#bbf7d0" }} />
                 <span style={{ height: 12, borderRadius: 6, background: "#e2e8f0" }} />
                 <span style={{ height: 12, borderRadius: 6, background: "#e2e8f0" }} />
                 <span style={{ height: 12, borderRadius: 6, background: row ? "#fecaca" : "#bbf7d0" }} />
@@ -385,7 +498,7 @@ function RecentTrades({
           </div>
           <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "8px 0" }}>
             <div style={{ marginBottom: 7, color: "#0f172a", fontSize: 15, fontWeight: 800 }}>
-              {revealLatest ? `Còn ${hiddenCount} vị thế` : "Lịch sử giao dịch đầy đủ"}
+              Khám phá toàn bộ lịch sử
             </div>
             <p style={{ margin: "0 0 15px", color: "#64748b", fontSize: 12, lineHeight: 1.55 }}>
               Nhận lịch sử giao dịch đầy đủ và trao đổi cùng chuyên gia.
@@ -556,10 +669,10 @@ export default function TradingDashboard({ trades }: Props) {
             <span style={{ fontSize: "11px", fontWeight: 600, color: "#00A67E", letterSpacing: "0.08em" }}>LIVE TRADING HISTORY</span>
           </div>
           <h1 className="td-h1" style={{ fontWeight: 800, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>
-            Hiệu suất giao dịch thực tế
+            Dashboard hiệu suất đầu tư
           </h1>
           <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
-            {stats.total} lệnh đã đóng · Dữ liệu cập nhật liên tục
+            Dữ liệu real-time cập nhật liên tục.
           </p>
 
           {/* Month filter — horizontal scroll on mobile */}
@@ -568,13 +681,13 @@ export default function TradingDashboard({ trades }: Props) {
 
         {/* Performance metrics */}
         <div className="td-metrics-grid">
-          <StatCard label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" />
+          <StatCard className="td-metric-primary" label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" />
           <StatCard label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins}W / ${stats.losses}L`} color="#00A67E" />
           <StatCard label="AVG R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ TB" color="#3b82f6" />
-          <StatCard label="PROFIT FACTOR" value={stats.profitFactor.toFixed(2)} sub="Tổng lãi / tổng lỗ" color="#f59e0b" />
-          <StatCard label="EXP. VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng / lệnh" color="#8b5cf6" />
-          <StatCard label="HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Giữ lệnh TB" color="#0f172a" />
-          <StatCard label="TOTAL FEES" value={`$${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Tổng phí giao dịch" color="#ef4444" />
+          <StatCard className="td-metric-mobile-hidden" label="PROFIT FACTOR" value={stats.profitFactor.toFixed(2)} sub="Tổng lãi / tổng lỗ" color="#f59e0b" />
+          <StatCard className="td-metric-mobile-hidden" label="EXP. VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng / lệnh" color="#8b5cf6" />
+          <StatCard className="td-metric-mobile-hidden" label="HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Giữ lệnh TB" color="#0f172a" />
+          <StatCard className="td-metric-fees" label="TOTAL FEES" value={`$${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Tổng phí giao dịch" color="#ef4444" />
           <StatCard label="MAX DRAWDOWN" value={`-$${stats.maxDrawdown.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức giảm tối đa" color="#ef4444" />
           <StatCard label="MAX RUNUP" value={`+$${stats.maxRunup.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức tăng tối đa" color="#00A67E" />
         </div>
@@ -603,7 +716,7 @@ export default function TradingDashboard({ trades }: Props) {
           </div>
 
           {/* Daily PNL */}
-          <div className="td-card" style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+          <div className="td-card td-daily-pnl" style={{ background: "#fff", border: "1px solid #e8ecf0", borderRadius: "14px", padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
             <div style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Daily PNL</div>
             <div style={{ fontSize: "12px", color: "#cbd5e1", marginBottom: "12px" }}>{stats.dailyPnl.length} ngày gần nhất</div>
             <svg viewBox={`0 0 ${barW} ${barH}`} style={{ width: "100%", height: "auto" }}>
@@ -634,4 +747,3 @@ export default function TradingDashboard({ trades }: Props) {
     </div>
   )
 }
-

@@ -18,7 +18,7 @@ const NAV_LINKS_RIGHT = [
 const DICH_VU_MENU = [
   {
     icon: "ti-chart-bar",
-    label: "Dashboard Hiệu suất",
+    label: "Dashboard hiệu suất đầu tư",
     desc: "Thống kê giao dịch thực tế, minh bạch, có kiểm chứng",
     href: "/dich-vu/hieu-suat",
     color: "#00A67E",

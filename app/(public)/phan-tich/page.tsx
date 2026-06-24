@@ -42,7 +42,6 @@ export default async function PhanTichPage({
     .eq("status", "published")
     .lte("published_at", new Date().toISOString())
     .order("published_at", { ascending: false })
-    .limit(20)
 
   if (category === "hot-news") {
     query = query.eq("is_hot", true)

@@ -470,34 +470,31 @@ export default function ArticleFeed({ articles }: { articles: any[] }) {
         }
       `}</style>
       {visibleEntries.map(([dateLabel, dayArticles]) => {
-        const featured = dayArticles[0]
-        const rest = dayArticles.slice(1)
-        const firstRow = rest.slice(0, 3)
-        const remaining = rest.slice(3)
+        const articleGroups: any[][] = []
+        for (let index = 0; index < dayArticles.length; index += 4) {
+          articleGroups.push(dayArticles.slice(index, index + 4))
+        }
 
         return (
           <div key={dateLabel} style={{ marginBottom: "40px" }}>
             <h2 style={{ fontSize: "20px", fontWeight: 400, color: "#0A1628", marginBottom: "16px" }}>{dateLabel}</h2>
-            <div style={{ marginBottom: "16px" }}>
-              <FeaturedCard article={featured} />
-            </div>
-            {firstRow.length > 0 && (
-              <div style={{ display: "grid", gridTemplateColumns: `repeat(${firstRow.length}, 1fr)`, gap: "20px", marginBottom: "8px" }}>
-                {firstRow.map((article) => <SmallCard key={article.id} article={article} />)}
-              </div>
-            )}
-            {remaining.length > 0 && (
-              <>
-                <div style={{ marginBottom: "16px", marginTop: "16px" }}>
-                  <FeaturedCard article={remaining[0]} />
-                </div>
-                {remaining.slice(1).length > 0 && (
-                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(remaining.slice(1).length, 3)}, 1fr)`, gap: "20px" }}>
-                    {remaining.slice(1, 4).map((article) => <SmallCard key={article.id} article={article} />)}
+            {articleGroups.map((group, groupIndex) => {
+              const featured = group[0]
+              const rest = group.slice(1)
+
+              return (
+                <div key={`${dateLabel}-${featured.id}`} style={{ marginTop: groupIndex === 0 ? 0 : "16px" }}>
+                  <div style={{ marginBottom: "16px" }}>
+                    <FeaturedCard article={featured} />
                   </div>
-                )}
-              </>
-            )}
+                  {rest.length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: `repeat(${rest.length}, 1fr)`, gap: "20px", marginBottom: "8px" }}>
+                      {rest.map((article) => <SmallCard key={article.id} article={article} />)}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )
       })}

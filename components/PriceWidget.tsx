@@ -13,20 +13,27 @@ interface Price {
 export default function PriceWidget() {
   const [prices, setPrices] = useState<Price[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string>("")
 
   const fetchPrices = async () => {
+    setError(null)
     try {
       const res = await fetch("/api/prices")
+      if (!res.ok) throw new Error("PRICE_API_ERROR")
+
       const data = await res.json()
-      if (data.prices) {
+      if (Array.isArray(data.prices) && data.prices.length > 0) {
         setPrices(data.prices)
         setLastUpdated(new Date().toLocaleTimeString("vi-VN", {
           hour: "2-digit", minute: "2-digit",
         }))
+      } else {
+        throw new Error("EMPTY_PRICE_DATA")
       }
     } catch (err) {
       console.error("Failed to fetch prices:", err)
+      setError("Giá thị trường đang tạm ngưng cập nhật")
     } finally {
       setLoading(false)
     }
@@ -64,9 +71,9 @@ export default function PriceWidget() {
           )}
           <span style={{
             width: "7px", height: "7px", borderRadius: "50%",
-            background: loading ? "#94a3b8" : "#00C389",
+            background: loading ? "#94a3b8" : error ? "#f59e0b" : "#00C389",
             display: "inline-block",
-            boxShadow: loading ? "none" : "0 0 6px #00C389",
+            boxShadow: loading ? "none" : error ? "0 0 6px rgba(245,158,11,.75)" : "0 0 6px #00C389",
           }} />
         </div>
       </div>
@@ -89,6 +96,45 @@ export default function PriceWidget() {
             </div>
           </div>
         ))
+      ) : error ? (
+        <div style={{
+          padding: "18px 16px",
+          background: "linear-gradient(135deg, #fff 0%, #fffbeb 100%)",
+          borderTop: "1px solid #fef3c7",
+        }}>
+          <div style={{
+            width: "34px", height: "34px", borderRadius: "10px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "#fff7ed", color: "#f59e0b",
+            border: "1px solid #fed7aa", marginBottom: "10px",
+          }}>
+            <i className="ti ti-wifi-off" style={{ fontSize: "17px" }} />
+          </div>
+          <div style={{
+            fontSize: "13px", fontWeight: 700, color: "#0A1628",
+            fontFamily: "'Roboto', 'DM Sans', sans-serif", marginBottom: "5px",
+          }}>
+            Tạm thời chưa có dữ liệu giá
+          </div>
+          <div style={{ fontSize: "11px", color: "#64748b", lineHeight: 1.5, marginBottom: "12px" }}>
+            Hệ thống sẽ tự cập nhật lại sau ít phút. Bạn cũng có thể thử tải lại ngay.
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true)
+              fetchPrices()
+            }}
+            style={{
+              height: "32px", padding: "0 12px", borderRadius: "8px",
+              border: "1px solid #fcd34d", background: "#fff",
+              color: "#92400e", fontSize: "12px", fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Thử lại
+          </button>
+        </div>
       ) : (
         prices.map((p, idx) => (
           <div key={p.name} style={{

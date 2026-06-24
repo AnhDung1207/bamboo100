@@ -4,6 +4,8 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import PriceWidget from "@/components/PriceWidget"
 import Navbar from "@/components/Navbar"
+import ArticleViewTracker from "@/components/ArticleViewTracker"
+import ArticleImageLightbox from "@/components/ArticleImageLightbox"
 export const revalidate = 300 // cache 5 phút
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -154,6 +156,8 @@ export default async function ArticleDetailPage({
   return (
     <div style={{ fontFamily: "'DM Sans', 'Inter', sans-serif", minHeight: "100vh", background: "#fff" }}>
 
+      <ArticleViewTracker articleId={a.id} />
+
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <style>{`
@@ -233,101 +237,9 @@ export default async function ArticleDetailPage({
           .lock-cta-btn   { min-width: 180px !important; padding: 11px 24px !important; font-size: 13px !important; }
         }
 
-        /* ─── LIGHTBOX ─── */
-        #lb-overlay {
-          display: none; position: fixed; inset: 0; z-index: 9999;
-          background: rgba(0,0,0,0.93); align-items: center; justify-content: center;
-        }
-        #lb-overlay.open { display: flex; }
-        #lb-img {
-          max-width: 90vw; max-height: 90vh;
-          border-radius: 8px; object-fit: contain;
-          transform-origin: 0 0; cursor: grab; user-select: none; transition: none;
-        }
-        #lb-img.dragging { cursor: grabbing; }
-        #lb-close {
-          position: fixed; top: 20px; right: 24px;
-          width: 36px; height: 36px; border-radius: 50%;
-          background: rgba(255,255,255,0.15); border: none;
-          color: #fff; font-size: 18px; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; z-index: 10000;
-        }
-        #lb-close:hover { background: rgba(255,255,255,0.25); }
-        #lb-hint {
-          position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-          color: rgba(255,255,255,0.45); font-size: 11px; pointer-events: none;
-        }
-
-        /* ─── ARTICLE IMAGES ─── */
-        .article-content img {
-          cursor: zoom-in; transition: opacity 0.15s;
-          border-radius: 8px; margin: 16px 0; max-width: 100%;
-        }
-        .article-content img:hover { opacity: 0.88; }
       `}</style>
 
-      {/* ─── LIGHTBOX HTML ─── */}
-      <div id="lb-overlay">
-        <button id="lb-close" aria-label="Đóng">✕</button>
-        <img id="lb-img" alt="Preview" draggable="false" />
-        <div id="lb-hint">Cuộn để zoom · Kéo để di chuyển · Esc để đóng</div>
-      </div>
-
-      {/* ─── LIGHTBOX SCRIPT ─── */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        (function() {
-          var overlay = document.getElementById('lb-overlay');
-          var img = document.getElementById('lb-img');
-          var closeBtn = document.getElementById('lb-close');
-          var scale = 1, tx = 0, ty = 0;
-          var dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
-
-          function applyTransform() {
-            img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
-          }
-          function openLightbox(src) {
-            img.src = src; scale = 1; tx = 0; ty = 0;
-            applyTransform();
-            overlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-          }
-          function closeLightbox() {
-            overlay.classList.remove('open');
-            document.body.style.overflow = '';
-          }
-          document.addEventListener('click', function(e) {
-            var t = e.target;
-            if (t.tagName === 'IMG' && t.closest('.article-content')) openLightbox(t.src);
-          });
-          closeBtn.addEventListener('click', closeLightbox);
-          overlay.addEventListener('click', function(e) { if (e.target === overlay) closeLightbox(); });
-          document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
-          overlay.addEventListener('wheel', function(e) {
-            e.preventDefault();
-            var rect = img.getBoundingClientRect();
-            var mouseX = e.clientX - rect.left;
-            var mouseY = e.clientY - rect.top;
-            var delta = e.deltaY > 0 ? 0.85 : 1.18;
-            var newScale = Math.min(Math.max(scale * delta, 0.5), 8);
-            tx = tx - mouseX * (newScale - scale);
-            ty = ty - mouseY * (newScale - scale);
-            scale = newScale;
-            applyTransform();
-          }, { passive: false });
-          img.addEventListener('mousedown', function(e) {
-            dragging = true; startX = e.clientX; startY = e.clientY;
-            startTx = tx; startTy = ty;
-            img.classList.add('dragging'); e.preventDefault();
-          });
-          document.addEventListener('mousemove', function(e) {
-            if (!dragging) return;
-            tx = startTx + (e.clientX - startX);
-            ty = startTy + (e.clientY - startY);
-            applyTransform();
-          });
-          document.addEventListener('mouseup', function() { dragging = false; img.classList.remove('dragging'); });
-        })();
-      `}} />
+      <ArticleImageLightbox />
 
       <Navbar />
 

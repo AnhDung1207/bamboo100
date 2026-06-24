@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 
 interface Trade {
@@ -57,15 +57,99 @@ const GLOBAL_CSS = `
     margin-bottom: 12px;
   }
   .td-stat-value { font-size: 24px; }
+  .td-mobile-extra { display: none; }
   .td-h1 { font-size: 26px; }
   .td-calendar-cell { min-height: 64px; padding: 6px; }
   .td-calendar-pnl { font-size: 11px; }
   .td-calendar-wl  { font-size: 10px; }
-  .td-month-scroll {
+  .td-month-filter {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
     margin-top: 16px;
+  }
+  .td-month-select-wrap {
+    position: relative;
+    width: 164px;
+  }
+  .td-month-select {
+    width: 100%;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 36px 0 16px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    text-align: left;
+  }
+  .td-month-select:hover { border-color: #cbd5e1; }
+  .td-month-select.is-open {
+    border-color: rgba(0,166,126,.55);
+    box-shadow: 0 0 0 3px rgba(0,166,126,.12);
+  }
+  .td-month-select-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #64748b;
+    font-size: 11px;
+    transition: transform .15s;
+  }
+  .td-month-select-icon.is-open {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  .td-month-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    overflow-y: auto;
+    max-height: 184px;
+    padding: 6px;
+    border: 1px solid #dbe5ef;
+    border-radius: 16px;
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 18px 45px rgba(15,23,42,.16);
+    backdrop-filter: blur(12px);
+    animation: tdMonthMenuIn .16s ease-out;
+  }
+  .td-month-menu::-webkit-scrollbar { width: 5px; }
+  .td-month-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+  .td-month-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #475569;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 12px;
+    text-align: left;
+  }
+  .td-month-option:hover { background: #f1f5f9; color: #0f172a; }
+  .td-month-option.is-active {
+    background: rgba(0,166,126,.1);
+    color: #008f6d;
+  }
+  @keyframes tdMonthMenuIn {
+    from { opacity: 0; transform: translateY(-4px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
   .td-container { padding: 32px 24px 64px; }
   .td-header { margin-bottom: 28px; }
@@ -97,16 +181,65 @@ const GLOBAL_CSS = `
     .td-daily-pnl { display: none; }
     .td-metrics-grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 12px;
+      margin-bottom: 14px;
     }
     .td-metric-primary {
-      background: linear-gradient(135deg, #ffffff 0%, #f0fdf8 100%) !important;
-      border-color: #bbf7d0 !important;
+      grid-column: 1 / -1;
+      justify-self: center;
+      width: 100%;
+      min-height: 138px;
+      padding: 22px 18px !important;
+      background:
+        radial-gradient(circle at 18% 16%, rgba(16,185,129,.18), transparent 30%),
+        linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%) !important;
+      border-color: rgba(16,185,129,.42) !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 16px 38px rgba(0,166,126,.16) !important;
+    }
+    .td-metric-primary .td-card-label {
+      color: #047857 !important;
+      margin-bottom: 9px !important;
+    }
+    .td-metric-primary .td-stat-value {
+      font-size: 30px !important;
+      letter-spacing: -.04em;
     }
     .td-metric-mobile-hidden { display: none; }
-    .td-metric-primary { grid-column: 1; grid-row: 1; }
-    .td-metric-fees { grid-column: 2; grid-row: 1; }
+    .td-metric-fees { display: none; }
+    .td-metric-win { grid-column: 1; grid-row: 2; }
+    .td-metric-avg { grid-column: 2; grid-row: 2; }
+    .td-metric-drawdown { grid-column: 1; grid-row: 3; }
+    .td-metric-runup { grid-column: 2; grid-row: 3; }
+    .td-metric-win,
+    .td-metric-avg,
+    .td-metric-drawdown,
+    .td-metric-runup {
+      min-height: 96px;
+      padding: 13px 14px !important;
+    }
+    .td-metric-win .td-stat-value,
+    .td-metric-avg .td-stat-value,
+    .td-metric-drawdown .td-stat-value,
+    .td-metric-runup .td-stat-value {
+      font-size: 19px !important;
+    }
+    .td-mobile-extra {
+      display: none !important;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      margin-top: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(239,68,68,.08);
+      color: #ef4444;
+      font-size: 11px;
+      font-weight: 700;
+    }
     .td-grid-2 {
       grid-template-columns: 1fr;
       gap: 10px;
@@ -117,14 +250,24 @@ const GLOBAL_CSS = `
     .td-calendar-cell { min-height: 52px; padding: 4px; }
     .td-calendar-pnl { font-size: 10px; }
     .td-calendar-wl  { font-size: 9px; }
-    .td-month-scroll {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
-      scrollbar-width: none;
+    .td-month-filter {
+      width: 100%;
+      gap: 8px;
     }
-    .td-month-scroll::-webkit-scrollbar { display: none; }
+    .td-month-select-wrap {
+      flex: 0 0 164px;
+      width: 164px;
+      min-width: 0;
+    }
+    .td-month-select {
+      height: 38px;
+      padding-left: 14px;
+      padding-right: 30px;
+    }
+    .td-month-menu {
+      max-height: 132px;
+      border-radius: 14px;
+    }
     .td-month-btn { white-space: nowrap; flex-shrink: 0; }
     .td-container { padding: 20px 16px 48px; }
     .td-header { margin-bottom: 20px; }
@@ -198,8 +341,8 @@ function GlobalStyle() {
   return <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
 }
 
-function StatCard({ label, value, sub, color = "#00A67E", className = "" }: {
-  label: string; value: string; sub?: string; color?: string; className?: string
+function StatCard({ label, value, sub, color = "#00A67E", className = "", mobileExtra }: {
+  label: string; value: string; sub?: string; color?: string; className?: string; mobileExtra?: string
 }) {
   return (
     <div className={`td-card ${className}`.trim()} style={{
@@ -216,6 +359,7 @@ function StatCard({ label, value, sub, color = "#00A67E", className = "" }: {
         {value}
       </div>
       {sub && <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>{sub}</div>}
+      {mobileExtra && <div className="td-mobile-extra">{mobileExtra}</div>}
     </div>
   )
 }
@@ -522,26 +666,77 @@ function MonthFilterRow({
   selectedMonth: string
   onSelect: (month: string) => void
 }) {
+  const [isMonthMenuOpen, setIsMonthMenuOpen] = useState(false)
+  const monthMenuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!isMonthMenuOpen) return
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null
+      if (target && monthMenuRef.current?.contains(target)) return
+      setIsMonthMenuOpen(false)
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick)
+    document.addEventListener("touchstart", handleOutsideClick)
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick)
+      document.removeEventListener("touchstart", handleOutsideClick)
+    }
+  }, [isMonthMenuOpen])
+
+  const formatMonth = (value: string) => {
+    const [year, month] = value.split("-")
+    return `${MONTH_NAMES[month]} ${year}`
+  }
+
+  const monthLabel = selectedMonth === "all" ? "Chọn tháng" : formatMonth(selectedMonth)
+
   return (
-    <div className="td-month-scroll">
+    <div className="td-month-filter">
       <button
         className="td-month-btn"
-        onClick={() => onSelect("all")}
+        onClick={() => {
+          onSelect("all")
+          setIsMonthMenuOpen(false)
+        }}
         style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === "all" ? "#00A67E" : "#fff", borderColor: selectedMonth === "all" ? "#00A67E" : "#e2e8f0", color: selectedMonth === "all" ? "#fff" : "#64748b", transition: "all 0.15s" }}>
         Tất cả
       </button>
-      {availableMonths.map((value) => {
-        const [year, month] = value.split("-")
-        return (
-          <button
-            key={value}
-            className="td-month-btn"
-            onClick={() => onSelect(value)}
-            style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "1px solid", background: selectedMonth === value ? "#00A67E" : "#fff", borderColor: selectedMonth === value ? "#00A67E" : "#e2e8f0", color: selectedMonth === value ? "#fff" : "#64748b", transition: "all 0.15s" }}>
-            {MONTH_NAMES[month]} {year}
-          </button>
-        )
-      })}
+      <div className="td-month-select-wrap" ref={monthMenuRef}>
+        <button
+          type="button"
+          className={`td-month-select${isMonthMenuOpen ? " is-open" : ""}`}
+          onClick={() => setIsMonthMenuOpen((open) => !open)}
+          aria-label="Chọn tháng dữ liệu"
+          aria-haspopup="listbox"
+          aria-expanded={isMonthMenuOpen}
+        >
+          {monthLabel}
+        </button>
+        <span className={`td-month-select-icon${isMonthMenuOpen ? " is-open" : ""}`}>▾</span>
+        {isMonthMenuOpen && (
+          <div className="td-month-menu" role="listbox" aria-label="Danh sách tháng dữ liệu">
+            {availableMonths.map((value) => (
+              <button
+                key={value}
+                type="button"
+                role="option"
+                aria-selected={selectedMonth === value}
+                className={`td-month-option${selectedMonth === value ? " is-active" : ""}`}
+                onClick={() => {
+                  onSelect(value)
+                  setIsMonthMenuOpen(false)
+                }}
+              >
+                {formatMonth(value)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -681,15 +876,15 @@ export default function TradingDashboard({ trades }: Props) {
 
         {/* Performance metrics */}
         <div className="td-metrics-grid">
-          <StatCard className="td-metric-primary" label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" />
-          <StatCard label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins}W / ${stats.losses}L`} color="#00A67E" />
-          <StatCard label="AVG R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ TB" color="#3b82f6" />
+          <StatCard className="td-metric-primary" label="REALIZED PNL" value={`${stats.totalNetPnl >= 0 ? "+" : ""}$${stats.totalNetPnl.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} color={stats.totalNetPnl >= 0 ? "#00A67E" : "#ef4444"} sub="Lợi nhuận ròng sau phí" mobileExtra={`Phí: $${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} />
+          <StatCard className="td-metric-win" label="WIN RATE" value={`${stats.winRate.toFixed(1)}%`} sub={`${stats.wins}W / ${stats.losses}L`} color="#00A67E" />
+          <StatCard className="td-metric-avg" label="AVG R:R" value={stats.avgRR.toFixed(2)} sub="Tỷ lệ lãi/lỗ TB" color="#3b82f6" />
           <StatCard className="td-metric-mobile-hidden" label="PROFIT FACTOR" value={stats.profitFactor.toFixed(2)} sub="Tổng lãi / tổng lỗ" color="#f59e0b" />
           <StatCard className="td-metric-mobile-hidden" label="EXP. VALUE" value={`$${stats.expectedValue.toFixed(0)}`} sub="Kỳ vọng / lệnh" color="#8b5cf6" />
           <StatCard className="td-metric-mobile-hidden" label="HOLD TIME" value={`${stats.holdHours}h ${stats.holdMins}m`} sub="Giữ lệnh TB" color="#0f172a" />
           <StatCard className="td-metric-fees" label="TOTAL FEES" value={`$${Math.abs(stats.totalFees).toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Tổng phí giao dịch" color="#ef4444" />
-          <StatCard label="MAX DRAWDOWN" value={`-$${stats.maxDrawdown.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức giảm tối đa" color="#ef4444" />
-          <StatCard label="MAX RUNUP" value={`+$${stats.maxRunup.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức tăng tối đa" color="#00A67E" />
+          <StatCard className="td-metric-drawdown" label="MAX DRAWDOWN" value={`-$${stats.maxDrawdown.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức giảm tối đa" color="#ef4444" />
+          <StatCard className="td-metric-runup" label="MAX RUNUP" value={`+$${stats.maxRunup.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="Mức tăng tối đa" color="#00A67E" />
         </div>
 
         {/* Charts row — stacks to 1 col on mobile */}

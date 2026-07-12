@@ -216,9 +216,9 @@ export default function HomePage() {
                 </div>
                 <h3 style={{ fontSize: "17px", fontWeight: 700, color: "#0A1628", margin: "0 0 8px" }}>{p.title}</h3>
                 <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.65, margin: "0 0 16px" }}>{p.desc}</p>
-                <Link href={p.href} style={{ fontSize: "13px", fontWeight: 600, color: "#00C389", textDecoration: "none" }}>
-                  Xem thêm →
-                </Link>
+                <Link href="/" style={{ fontSize: "13px", fontWeight: 600, color: "#00C389", textDecoration: "none" }}>
+  Xem thêm →
+</Link>
               </div>
             ))}
           </div>

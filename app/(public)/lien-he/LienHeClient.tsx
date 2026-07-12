@@ -12,9 +12,14 @@ export default function LienHeClient() {
   })
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<"" | "success" | "error">("")
+  const [errorMsg, setErrorMsg] = useState("")
 
   const handleSubmit = async () => {
-    if (!form.name || !form.phone) { setStatus("error"); return }
+    if (!form.name || !form.phone) {
+      setStatus("error")
+      setErrorMsg("Vui lòng điền đầy đủ họ tên và số điện thoại.")
+      return
+    }
     setLoading(true)
     const { error } = await supabase.from("leads").insert({
       full_name: form.name,
@@ -25,7 +30,12 @@ export default function LienHeClient() {
       status: "new",
     })
     setLoading(false)
-    if (error) { setStatus("error"); return }
+    if (error) {
+      console.error("Insert lead failed:", error)
+      setStatus("error")
+      setErrorMsg("Có lỗi xảy ra, vui lòng thử lại sau hoặc liên hệ hotline.")
+      return
+    }
     setStatus("success")
     setForm({ name: "", email: "", phone: "", need: "", message: "" })
   }
@@ -182,7 +192,22 @@ export default function LienHeClient() {
               background: "rgba(0,195,137,0.06)", borderRadius: "12px",
               border: "1px solid rgba(0,195,137,0.2)",
             }}>
-              <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
+              <div style={{
+  width: "56px", height: "56px", borderRadius: "50%",
+  background: "rgba(0,195,137,0.12)",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  margin: "0 auto 16px",
+}}>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M20 6L9 17l-5-5"
+      stroke="#00C389"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+</div>
               <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#0A1628", marginBottom: "8px" }}>
                 Gửi thành công!
               </h3>
@@ -289,7 +314,7 @@ export default function LienHeClient() {
 
               {status === "error" && (
                 <p style={{ fontSize: "12px", color: "#dc2626" }}>
-                  Vui lòng điền đầy đủ họ tên và số điện thoại.
+                  {errorMsg}
                 </p>
               )}
 

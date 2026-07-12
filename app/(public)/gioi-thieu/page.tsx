@@ -55,10 +55,10 @@ const TEAM = [
     desc: "10+ năm kinh nghiệm trong lĩnh vực tài chính và đầu tư.",
     initials: "AD" },
   { name: "Nguyễn Thành Nam", role: "Giám đốc Khối Đầu Tư", color: "#0ea5e9",
-    desc: "Chuyên gia quản trị danh mục đầu tư thị trường Hàng hóa, Chứng khoán.", initials: "LA" },
+    desc: "Chuyên gia quản trị danh mục đầu tư thị trường Hàng hóa, Chứng khoán.", initials: "TN" },
   { name: "Trần Lan Anh", role: "Giám đốc Kinh Doanh", color: "#f97316",
     desc: "Nhiều năm kinh nghiệm trong lĩnh vực tài chính, giữ vai trò then chốt trong việc xây dựng chiến lược phát triển thị trường và mở rộng hệ thống khách hàng.",
-    initials: "HN" },
+    initials: "LA" },
 ]
 
 const TIMELINE = [

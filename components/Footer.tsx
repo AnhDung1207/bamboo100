@@ -122,7 +122,7 @@ export default function Footer() {
             <li className="flex items-start gap-3">
               <i className="ti ti-map-pin" style={{ fontSize: "15px", color: "#00C389", flexShrink: 0, marginTop: "2px" }} />
               <span className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
-                Tầng 7, số 5B ngõ 55 Huỳnh Thúc Kháng, Đống Đa, Hà Nội
+                Tầng 11, Tòa nhà Ladeco, số 266 Đội Cấn, Phường Ngọc Hà, TP Hà Nội
               </span>
             </li>
           </ul>

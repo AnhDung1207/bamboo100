@@ -108,7 +108,7 @@ export default function LienHeClient() {
           {[
             {
               icon: "ti-map-pin", label: "Địa chỉ",
-              value: "Tầng 7, số 5B ngõ 55 Huỳnh Thúc Kháng, Đống Đa, Hà Nội",
+              value: "Tầng 11, Tòa nhà Ladeco, số 266 Đội Cấn, Phường Ngọc Hà, TP Hà Nội",
             },
             { icon: "ti-phone", label: "Hotline", value: "0378 219 712" },
             { icon: "ti-mail", label: "Email", value: "daucohanghoa@gmail.com" },

@@ -24,6 +24,16 @@ const SERVICES = [
     border: "rgba(59,130,246,0.2)",
     tag: "Cập nhật hàng tuần",
   },
+  {
+    href: "/dich-vu/ky-quy",
+    icon: "💰",
+    title: "Ký quỹ",
+    desc: "Mức ký quỹ của từng sản phẩm hàng hoá — theo tổ chức và cá nhân, cập nhật theo thông báo của MXV.",
+    color: "#f59e0b",
+    bg: "rgba(245,158,11,0.06)",
+    border: "rgba(245,158,11,0.2)",
+    tag: "Biểu ký quỹ",
+  },
 ]
 
 export default function DichVuPage() {
@@ -44,7 +54,7 @@ export default function DichVuPage() {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "20px" }}>
           {SERVICES.map((s) => (
             <Link key={s.href} href={s.href} style={{ textDecoration: "none", display: "block", background: "#fff", border: "1px solid #e8ecf0", borderRadius: "16px", padding: "28px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", transition: "box-shadow 0.2s, transform 0.2s" }}
               onMouseOver={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.10)"; (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-2px)" }}

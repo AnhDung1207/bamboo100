@@ -30,6 +30,13 @@ const DICH_VU_MENU = [
     href: "/dich-vu/bao-cao-cot",
     color: "#3b82f6",
   },
+  {
+    icon: "ti-coin",
+    label: "Ký quỹ",
+    desc: "Mức ký quỹ của từng sản phẩm, theo tổ chức và cá nhân",
+    href: "/dich-vu/ky-quy",
+    color: "#f59e0b",
+  },
 ]
 
 const HOC_VIEN_MENU = [

@@ -22,6 +22,7 @@ const NAV = [
       { label: "Khóa học",      href: "/admin/khoa-hoc", icon: "ti-school",           adminOnly: false },
       { label: "Ebook",         href: "/admin/ebook",    icon: "ti-book",             adminOnly: false },
       { label: "Sự kiện",       href: "/admin/su-kien",  icon: "ti-calendar-event",   adminOnly: false },
+      { label: "Ký quỹ",        href: "/admin/ky-quy",   icon: "ti-coin",             adminOnly: false },
     ],
   },
   {
